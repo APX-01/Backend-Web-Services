@@ -52,7 +52,7 @@ public class SubmissionsController {
         var submission= submissionQueryService.handle(getSubmissionByIdQuery);
 
         if(submission.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.notFound().build(); //404 Not Found
         }
         var submissionEntity= submission.get();
         var submissionResponse= SubmissionResourceFromEntityAssembler.toResourceFromEntity(submissionEntity);
@@ -69,7 +69,7 @@ public class SubmissionsController {
         var updateSubmissionCommand= UpdateSubmissionCommandFromResourceAssembler.toCommandFromResource(submissionId, updateSubmissionResource);
         var updatedSubmission= submissionCommandService.handle(updateSubmissionCommand);
         if (updatedSubmission.isEmpty()) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().build(); //400 Bad Request
         }
 
         var updatedSubmissionEntity= updatedSubmission.get();
