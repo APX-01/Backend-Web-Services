@@ -2,14 +2,17 @@ package com.education.eduhive.groups.interfaces.rest;
 
 import com.education.eduhive.groups.domain.model.aggregates.Group;
 import com.education.eduhive.groups.domain.model.commands.CreateGroupCommand;
+import com.education.eduhive.groups.domain.model.commands.DeleteGroupCommand;
 import com.education.eduhive.groups.domain.model.queries.GetAllGroupsQuery;
 import com.education.eduhive.groups.domain.model.queries.GetGroupByIdQuery;
 import com.education.eduhive.groups.domain.services.GroupCommandService;
 import com.education.eduhive.groups.domain.services.GroupQueryService;
 import com.education.eduhive.groups.interfaces.rest.resources.CreateGroupResource;
 import com.education.eduhive.groups.interfaces.rest.resources.GroupResource;
+import com.education.eduhive.groups.interfaces.rest.resources.UpdateGroupResource;
 import com.education.eduhive.groups.interfaces.rest.transform.CreateGroupCommandFromResourceAssembler;
 import com.education.eduhive.groups.interfaces.rest.transform.GroupResourceFromEntityAssembler;
+import com.education.eduhive.groups.interfaces.rest.transform.UpdateGroupCommandFromResourceAssembler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -64,8 +67,8 @@ public class GroupsController {
     @Operation(summary = "Get all groups", description = "Gets all groups")
     @ApiResponses(
             value = {
-                    @ApiResponse(responseCode = "201", description = "Group Created Successfully"),
-                    @ApiResponse(responseCode = "404", description = "Invalid input data")
+                    @ApiResponse(responseCode = "200", description = "Groups retrieved Successfully"),
+                    @ApiResponse(responseCode = "404", description = "Could not retrieve groups")
             }
     )
     public ResponseEntity<List<GroupResource>> getAllGroups() {
@@ -78,5 +81,62 @@ public class GroupsController {
 
         var groupResponse = groups.stream().map(GroupResourceFromEntityAssembler::toResourceFromEntity).toList();
         return ResponseEntity.ok(groupResponse);
+    }
+
+    @GetMapping(value = "/{id}")
+    @Operation(summary = "Get group by id", description = "Retrieves a group with the specified id")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(responseCode = "200", description = "Group retrieved successfully"),
+                    @ApiResponse(responseCode = "404", description = "Group with specified id does not exist")
+            }
+    )
+    public ResponseEntity<GroupResource> getGroupById(@PathVariable("id") Long id) {
+        var getGroupByIdQuery = new GetGroupByIdQuery(id);
+        var group = groupQueryService.handle(getGroupByIdQuery);
+        if (group.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        var groupEntity = group.get();
+        var groupResponse = GroupResourceFromEntityAssembler.toResourceFromEntity(groupEntity);
+        return ResponseEntity.ok(groupResponse);
+    }
+
+    @PutMapping(value = "/{id}")
+    @Operation(summary = "Update a group", description = "Update the group with the specified id")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(responseCode = "200", description = "Group updated successfully"),
+                    @ApiResponse(responseCode = "404", description = "Group with specified id does not exist")
+            }
+    )
+    public ResponseEntity<GroupResource> updateGroup(@RequestBody UpdateGroupResource resource, @PathVariable("id") Long id) {
+        var updateCommand = UpdateGroupCommandFromResourceAssembler.toCommandFromResource(resource, id);
+        var updatedGroup = groupCommandService.handle(updateCommand);
+        if (updatedGroup.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        var getGroupByIdQuery = new GetGroupByIdQuery(id);
+        var group = groupQueryService.handle(getGroupByIdQuery);
+        if (group.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        var groupEntity = group.get();
+        var groupResponse = GroupResourceFromEntityAssembler.toResourceFromEntity(groupEntity);
+        return ResponseEntity.ok(groupResponse);
+    }
+
+    @DeleteMapping(value = "/{id}")
+    @Operation(summary = "Delete group", description = "Delete the group with the specified id")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(responseCode = "200", description = "Group deleted successfully"),
+                    @ApiResponse(responseCode = "404", description = "Group with the specified id does not exist")
+            }
+    )
+    public ResponseEntity<Void> deleteGroup(@PathVariable("id") Long id) {
+        var deleteGroupCommand = new DeleteGroupCommand(id);
+        groupCommandService.handle(deleteGroupCommand);
+        return ResponseEntity.noContent().build();
     }
 }

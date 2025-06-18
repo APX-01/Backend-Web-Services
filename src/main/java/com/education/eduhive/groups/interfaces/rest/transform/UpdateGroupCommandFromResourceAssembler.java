@@ -4,9 +4,9 @@ import com.education.eduhive.groups.domain.model.commands.UpdateGroupCommand;
 import com.education.eduhive.groups.interfaces.rest.resources.UpdateGroupResource;
 
 public class UpdateGroupCommandFromResourceAssembler {
-    public static UpdateGroupCommand toCommandFromResource(UpdateGroupResource resource) {
+    public static UpdateGroupCommand toCommandFromResource(UpdateGroupResource resource, Long groupId) {
         return new UpdateGroupCommand(
-                resource.id(),
+                groupId,
                 resource.name(),
                 resource.description(),
                 resource.imageUrl()
