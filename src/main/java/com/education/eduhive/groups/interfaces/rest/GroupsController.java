@@ -130,7 +130,7 @@ public class GroupsController {
     @Operation(summary = "Delete group", description = "Delete the group with the specified id")
     @ApiResponses(
             value = {
-                    @ApiResponse(responseCode = "200", description = "Group deleted successfully"),
+                    @ApiResponse(responseCode = "204", description = "Group deleted successfully"),
                     @ApiResponse(responseCode = "404", description = "Group with the specified id does not exist")
             }
     )
