@@ -1,12 +1,12 @@
 package com.education.eduhive.iam.interfaces.rest.resources;
 
-public record CreateStudentResource(
+public record UpdateUserResource(
         String email,
         String firstName,
         String lastName,
         String password
 ) {
-    public CreateStudentResource {
+    public UpdateUserResource {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("Email cannot be null or blank");
         }
