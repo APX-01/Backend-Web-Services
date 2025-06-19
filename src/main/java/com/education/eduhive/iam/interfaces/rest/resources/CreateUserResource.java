@@ -1,18 +1,15 @@
-package com.education.eduhive.iam.domain.model.commads;
+package com.education.eduhive.iam.interfaces.rest.resources;
 
-public record UpdateStudentCommand(
-        Long studentId,
+import com.education.eduhive.iam.domain.model.valueobjects.Role;
+
+public record CreateUserResource(
         String email,
         String firstName,
         String lastName,
-        String password
+        String password,
+        Role role
 ) {
-
-    public UpdateStudentCommand{
-
-        if (studentId == null || studentId <= 0) {
-            throw new IllegalArgumentException("StudentId must be greater than 0");
-        }
+    public CreateUserResource {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("Email cannot be null or blank");
         }
@@ -25,7 +22,8 @@ public record UpdateStudentCommand(
         if (password == null || password.isBlank()) {
             throw new IllegalArgumentException("Password cannot be null or blank");
         }
-
-
+        if (role == null) {
+            throw new IllegalArgumentException("Role cannot be null");
+        }
     }
 }

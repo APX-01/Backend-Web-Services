@@ -1,9 +1,9 @@
 package com.education.eduhive.iam.domain.model.commads;
 
-public record DeleteStudentCommand(Long studentId) {
+public record DeleteUserCommand(Long userId) {
 
-    public DeleteStudentCommand {
-        if (studentId == null || studentId <= 0) {
+    public DeleteUserCommand {
+        if (userId == null || userId <= 0) {
             throw new IllegalArgumentException("StudentId must be greater than 0");
         }
     }

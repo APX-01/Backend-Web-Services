@@ -3,7 +3,9 @@ package com.education.eduhive.groups.domain.model.commands;
 public record CreateGroupCommand(
         String name,
         String description,
-        String imageUrl
+        String imageUrl,
+        //creacion del grupo por el teacher
+        Long teacherId
 ) {
     public CreateGroupCommand {
         if (name == null || name.isBlank()) {

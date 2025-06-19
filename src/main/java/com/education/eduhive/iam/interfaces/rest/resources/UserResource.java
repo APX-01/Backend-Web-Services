@@ -4,12 +4,11 @@ import com.education.eduhive.iam.domain.model.valueobjects.Role;
 
 import java.util.List;
 
-public record TeacherResource(
+public record UserResource(
         Long id,
         String email,
         String firstName,
         String lastName,
         Role role,
         List<ProfileInGroupsResource> profilesInGroups
-) {
-}
+) { }

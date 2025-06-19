@@ -1,7 +1,5 @@
 package com.education.eduhive.groups.interfaces.rest;
 
-import com.education.eduhive.groups.domain.model.aggregates.Group;
-import com.education.eduhive.groups.domain.model.commands.CreateGroupCommand;
 import com.education.eduhive.groups.domain.model.commands.DeleteGroupCommand;
 import com.education.eduhive.groups.domain.model.queries.GetAllGroupsQuery;
 import com.education.eduhive.groups.domain.model.queries.GetGroupByIdQuery;
@@ -9,9 +7,11 @@ import com.education.eduhive.groups.domain.services.GroupCommandService;
 import com.education.eduhive.groups.domain.services.GroupQueryService;
 import com.education.eduhive.groups.interfaces.rest.resources.CreateGroupResource;
 import com.education.eduhive.groups.interfaces.rest.resources.GroupResource;
+import com.education.eduhive.groups.interfaces.rest.resources.JoinGroupResource;
 import com.education.eduhive.groups.interfaces.rest.resources.UpdateGroupResource;
 import com.education.eduhive.groups.interfaces.rest.transform.CreateGroupCommandFromResourceAssembler;
 import com.education.eduhive.groups.interfaces.rest.transform.GroupResourceFromEntityAssembler;
+import com.education.eduhive.groups.interfaces.rest.transform.JoinGroupByCodeCommandFromResourceAssembler;
 import com.education.eduhive.groups.interfaces.rest.transform.UpdateGroupCommandFromResourceAssembler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -138,5 +138,26 @@ public class GroupsController {
         var deleteGroupCommand = new DeleteGroupCommand(id);
         groupCommandService.handle(deleteGroupCommand);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/join")
+    @Operation(summary = "Join a group via join code")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Joined group successfully"),
+            @ApiResponse(responseCode = "404", description = "Group not found")
+    })
+    public ResponseEntity<GroupResource> joinGroup(@RequestBody JoinGroupResource joinGroupResource) {
+        // Convertir el recurso al comando con el Assembler
+        var joinGroupByCodeCommand = JoinGroupByCodeCommandFromResourceAssembler.toCommandFromResource(joinGroupResource);
+
+        // Ejecutar el comando
+        var groupOptional = groupCommandService.handle(joinGroupByCodeCommand);
+
+        if (groupOptional.isPresent()) {
+            var groupResource = GroupResourceFromEntityAssembler.toResourceFromEntity(groupOptional.get());
+            return ResponseEntity.ok(groupResource); // 200 OK
+        } else {
+            return ResponseEntity.badRequest().build(); // 400 Bad Request
+        }
     }
 }
