@@ -7,6 +7,7 @@ import com.education.eduhive.challenges.domain.model.commands.UpdateChallengeCom
 import com.education.eduhive.challenges.domain.model.valueobjects.Title;
 import com.education.eduhive.challenges.domain.services.ChallengeCommandService;
 import com.education.eduhive.challenges.infrastructure.persistence.jpa.repositories.ChallengeRepository;
+import com.education.eduhive.groups.infrastructure.persistence.jpa.repositories.GroupRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -15,15 +16,24 @@ import java.util.Optional;
 public class ChallengeCommandServiceImpl implements ChallengeCommandService {
 
     private final ChallengeRepository challengeRepository;
+    private final GroupRepository groupRepository;
 
-    public ChallengeCommandServiceImpl(ChallengeRepository challengeRepository) {
+    public ChallengeCommandServiceImpl(ChallengeRepository challengeRepository,GroupRepository groupRepository) {
         this.challengeRepository = challengeRepository;
+        this.groupRepository = groupRepository;
     }
 
 
 
     @Override
     public Long handle(CreateChallengeCommand createChallengeCommand) {
+
+        // Validación cruzada entre BCs
+        if (!groupRepository.existsById(createChallengeCommand.groupId())){
+            throw new IllegalArgumentException("Group not found: ");
+        }
+
+
         if (challengeRepository.existsByTitle(new Title(createChallengeCommand.title()))){
             throw new IllegalArgumentException("Title already exists");
         }
