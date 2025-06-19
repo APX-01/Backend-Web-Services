@@ -53,6 +53,12 @@ public class ChallengeCommandServiceImpl implements ChallengeCommandService {
         if (challenge.isEmpty()) {
             throw new IllegalArgumentException("Challenge not found: " + updateChallengeCommand.challengeId());
         }
+
+        // Validación cruzada entre BCs
+        if (!groupRepository.existsById(updateChallengeCommand.groupId())) {
+            throw new IllegalArgumentException("Group not found: " + updateChallengeCommand.groupId());
+        }
+
         var challengeToUpdate = challenge.get();
         try{
             var updatedChallenge= challengeRepository.save(challengeToUpdate
