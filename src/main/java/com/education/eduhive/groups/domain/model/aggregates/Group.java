@@ -10,6 +10,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.Getter;
 
+import java.util.Date;
+
 @Entity
 @Getter
 @Table(name = "user_groups")
@@ -30,7 +32,7 @@ public class Group extends AuditableAbstractAggregateRoot<Group> {
         this.name = command.name();
         this.description = command.description();
         this.imageUrl = command.imageUrl();
-        this.joinCode = null;
+        this.joinCode = new GroupJoinCode("A1B2C3D4", new Date(1769552000000L)); // Example join code, replace with actual logic
     }
 
     public Group updateGroup(UpdateGroupCommand command) {

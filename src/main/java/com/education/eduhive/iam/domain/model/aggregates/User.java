@@ -1,7 +1,7 @@
 package com.education.eduhive.iam.domain.model.aggregates;
 
-import com.education.eduhive.iam.domain.model.commads.CreateStudentCommand;
-import com.education.eduhive.iam.domain.model.commads.UpdateStudentCommand;
+import com.education.eduhive.iam.domain.model.commads.CreateUserCommand;
+import com.education.eduhive.iam.domain.model.commads.UpdateUserCommand;
 import com.education.eduhive.iam.domain.model.valueobjects.ProfileInGroup;
 import com.education.eduhive.iam.domain.model.valueobjects.Role;
 import com.education.eduhive.shared.domain.model.aggregates.AuditableAbstractAggregateRoot;
@@ -13,7 +13,7 @@ import java.util.List;
 
 @Getter
 @Entity
-public class Student extends AuditableAbstractAggregateRoot<Student> {
+public class User extends AuditableAbstractAggregateRoot<User> {
 
     private String email;
     private String firstName;
@@ -25,31 +25,31 @@ public class Student extends AuditableAbstractAggregateRoot<Student> {
     private String password;
 
     @ElementCollection
-    @CollectionTable(name = "student_profiles_in_groups", joinColumns = @JoinColumn(name = "student_id"))
+    @CollectionTable(name = "user_profiles_in_groups", joinColumns = @JoinColumn(name = "user_id"))
     private List<ProfileInGroup> profilesInGroups = new ArrayList<>();
 
-    protected Student() {
+    protected User() {
         super();
     }
 
     //command
-    public Student(CreateStudentCommand createStudentCommand){
+    public User(CreateUserCommand createUserCommand){
         super();
-        this.email = createStudentCommand.email();
-        this.firstName = createStudentCommand.firstName();
-        this.lastName = createStudentCommand.lastName();
-        this.role = Role.ROLE_STUDENT; // Assuming the role is always STUDENT for this command
-        this.password = createStudentCommand.password();
+        this.email = createUserCommand.email();
+        this.firstName = createUserCommand.firstName();
+        this.lastName = createUserCommand.lastName();
+        this.role = createUserCommand.role(); // Assuming the role is always STUDENT for this command
+        this.password = createUserCommand.password();
         this.profilesInGroups = new ArrayList<>(); // Initialize with an empty list
     }
 
     //update
-    public Student updateStudentDetails(UpdateStudentCommand updateStudentCommand){
-        this.email = updateStudentCommand.email();
-        this.firstName = updateStudentCommand.firstName();
-        this.lastName = updateStudentCommand.lastName();
+    public User updateStudentDetails(UpdateUserCommand updateUserCommand){
+        this.email = updateUserCommand.email();
+        this.firstName = updateUserCommand.firstName();
+        this.lastName = updateUserCommand.lastName();
         // Assuming the role remains the same, we do not change it here
-        this.password = updateStudentCommand.password();
+        this.password = updateUserCommand.password();
         // If you need to update profilesInGroups, you can add logic here
         return this;
     }
