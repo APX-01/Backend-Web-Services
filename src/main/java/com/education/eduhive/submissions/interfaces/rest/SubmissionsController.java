@@ -44,6 +44,7 @@ public class SubmissionsController {
             @ApiResponse (responseCode = "400", description = "Invalid input data")
     })
     public ResponseEntity<SubmissionResource> createSubmission(@RequestBody CreateSubmissionResource submissionResource){
+
         var createdSubmission= CreateSubmissionCommandFromResourceAssembler.toCommandFromResource(submissionResource);
         var submissionId = submissionCommandService.handle(createdSubmission);
         if(submissionId ==null|| submissionId ==0L) {
