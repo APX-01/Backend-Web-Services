@@ -7,6 +7,7 @@ import com.education.eduhive.shared.domain.model.aggregates.AuditableAbstractAgg
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 
@@ -38,6 +39,16 @@ public class Group extends AuditableAbstractAggregateRoot<Group> {
         this.description = command.description();
         this.imageUrl = command.imageUrl();
 
+        return this;
+    }
+
+    public Group setJoinCode(GroupJoinCode joinCode) {
+        this.joinCode = joinCode;
+        return this;
+    }
+
+    public Group resetJoinCode() {
+        this.joinCode = null;
         return this;
     }
 }
