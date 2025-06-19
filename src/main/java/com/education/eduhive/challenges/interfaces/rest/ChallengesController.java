@@ -5,6 +5,7 @@ import com.education.eduhive.challenges.domain.model.commands.CreateChallengeCom
 import com.education.eduhive.challenges.domain.model.commands.DeleteChallengeCommand;
 import com.education.eduhive.challenges.domain.model.queries.GetAllChallengesQuery;
 import com.education.eduhive.challenges.domain.model.queries.GetChallengeByIdQuery;
+import com.education.eduhive.challenges.domain.model.queries.GetChallengesByGroupIdQuery;
 import com.education.eduhive.challenges.domain.services.ChallengeCommandService;
 import com.education.eduhive.challenges.domain.services.ChallengeQueryService;
 import com.education.eduhive.challenges.interfaces.rest.resource.ChallengeResource;
@@ -126,6 +127,25 @@ public class ChallengesController{
                 .toList();
 
         return ResponseEntity.ok(challengeResources); //200 es ok, devuelve la lista de challenges
+    }
+
+    @GetMapping("/groups/{groupId}/challenges")
+    @Operation(summary = "Get challenges by group ID", description = "Retrieves a list of challenges associated with a specific group ID.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Challenges retrieved successfully"),
+        @ApiResponse(responseCode = "404", description = "No challenges found for the group")
+    })
+    public ResponseEntity<List<ChallengeResource>> getChallengesByGroupId(@PathVariable Long groupId){
+        var getChallengesByGroupIdQuery=new GetChallengesByGroupIdQuery(groupId);
+        var challenges=challengeQueryService.handle(getChallengesByGroupIdQuery);
+        if (challenges.isEmpty()){
+            return ResponseEntity.notFound().build(); // da una respuesta 404 y vacia
+        }
+        var challengeResources=challenges.stream()
+                .map(ChallengeResourceFromEntityAssembler::toResourceFromEntity)
+                .toList();
+
+        return ResponseEntity.ok(challengeResources);
     }
 
 
