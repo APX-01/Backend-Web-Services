@@ -48,6 +48,12 @@ public class SubmissionCommandServiceImpl implements SubmissionCommandService {
         if (submission.isEmpty()) {
             throw new IllegalArgumentException("Submission with ID " + updateSubmissionCommand.submissionId() + " not found");
         }
+
+        // Validación cruzada entre BCs
+        if (!challengeRepository.existsById(updateSubmissionCommand.challengeId())) {
+            throw new IllegalArgumentException("Challenge with ID " + updateSubmissionCommand.challengeId() + " not found");
+        }
+
         var submissionToUpdate = submission.get();
         try{
             var updatedSubmission= submissionRepository.save(submissionToUpdate
