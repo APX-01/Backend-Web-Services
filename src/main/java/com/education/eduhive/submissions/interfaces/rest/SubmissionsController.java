@@ -4,6 +4,7 @@ import com.education.eduhive.submissions.domain.model.aggregates.Submission;
 import com.education.eduhive.submissions.domain.model.commands.DeleteSubmissionCommand;
 import com.education.eduhive.submissions.domain.model.queries.GetAllSubmissionsQuery;
 import com.education.eduhive.submissions.domain.model.queries.GetSubmissionByIdQuery;
+import com.education.eduhive.submissions.domain.model.queries.GetSubmissionsByChallengeIdQuery;
 import com.education.eduhive.submissions.domain.services.SubmissionCommandService;
 import com.education.eduhive.submissions.domain.services.SubmissionQueryService;
 import com.education.eduhive.submissions.interfaces.rest.resources.CreateSubmissionResource;
@@ -118,6 +119,26 @@ public class SubmissionsController {
     })
     public ResponseEntity<List<SubmissionResource>> getAllSubmissions(){
         var submissions = submissionQueryService.handle(new GetAllSubmissionsQuery());
+        if (submissions.isEmpty()) {
+            return ResponseEntity.notFound().build(); //404 Not Found
+        }
+
+        var submissionResources = submissions.stream()
+                .map(SubmissionResourceFromEntityAssembler::toResourceFromEntity)
+                .toList();
+
+        return ResponseEntity.ok(submissionResources);
+    }
+
+    @GetMapping("/challenges/{challengeId}/submissions")
+    @Operation(summary = "Get submissions by challengeId", description = "Retrieves submissions by challengeId.")
+    @ApiResponses(value = {
+            @ApiResponse (responseCode = "200", description = "Submissions retrieved successfully"),
+            @ApiResponse (responseCode = "404", description = "No submissions found")
+    })
+    public ResponseEntity<List<SubmissionResource>> getSubmissionsByChallengeId(@PathVariable Long challengeId) {
+        var getSubmissionsByChallengeIdQuery = new GetSubmissionsByChallengeIdQuery(challengeId);
+        var submissions = submissionQueryService.handle(getSubmissionsByChallengeIdQuery);
         if (submissions.isEmpty()) {
             return ResponseEntity.notFound().build(); //404 Not Found
         }

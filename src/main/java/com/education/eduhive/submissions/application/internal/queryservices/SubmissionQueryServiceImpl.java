@@ -3,6 +3,8 @@ package com.education.eduhive.submissions.application.internal.queryservices;
 import com.education.eduhive.submissions.domain.model.aggregates.Submission;
 import com.education.eduhive.submissions.domain.model.queries.GetAllSubmissionsQuery;
 import com.education.eduhive.submissions.domain.model.queries.GetSubmissionByIdQuery;
+import com.education.eduhive.submissions.domain.model.queries.GetSubmissionsByChallengeIdQuery;
+import com.education.eduhive.submissions.domain.model.valueobjects.ChallengeId;
 import com.education.eduhive.submissions.domain.services.SubmissionQueryService;
 import com.education.eduhive.submissions.infrastructure.persistence.jpa.respositories.SubmissionRepository;
 import org.springframework.stereotype.Service;
@@ -29,5 +31,11 @@ public class SubmissionQueryServiceImpl implements SubmissionQueryService {
     @Override
     public List<Submission> handle(GetAllSubmissionsQuery getAllSubmissionsQuery) {
         return submissionRepository.findAll();
+    }
+
+    @Override
+    public List<Submission> handle(GetSubmissionsByChallengeIdQuery getSubmissionsByChallengeIdQuery) {
+        //es de esta manera porque ChallengeId es un ValueObject
+        return submissionRepository.findByChallengeId(new ChallengeId(getSubmissionsByChallengeIdQuery.challengeId()));
     }
 }

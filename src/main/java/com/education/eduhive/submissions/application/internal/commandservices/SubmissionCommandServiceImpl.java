@@ -1,5 +1,6 @@
 package com.education.eduhive.submissions.application.internal.commandservices;
 
+import com.education.eduhive.challenges.infrastructure.persistence.jpa.repositories.ChallengeRepository;
 import com.education.eduhive.submissions.domain.model.aggregates.Submission;
 import com.education.eduhive.submissions.domain.model.commands.CreateSubmissionCommand;
 import com.education.eduhive.submissions.domain.model.commands.DeleteSubmissionCommand;
@@ -14,13 +15,22 @@ import java.util.Optional;
 public class SubmissionCommandServiceImpl implements SubmissionCommandService {
 
     private final SubmissionRepository submissionRepository;
+    private final ChallengeRepository challengeRepository;
 
-    public SubmissionCommandServiceImpl(SubmissionRepository submissionRepository) {
+    public SubmissionCommandServiceImpl(SubmissionRepository submissionRepository,ChallengeRepository challengeRepository) {
         this.submissionRepository = submissionRepository;
+        this.challengeRepository = challengeRepository;
     }
 
     @Override
     public Long handle(CreateSubmissionCommand createSubmissionCommand) {
+
+        // Validación cruzada entre BCs
+        if (!challengeRepository.existsById(createSubmissionCommand.challengeId())) {
+            throw new IllegalArgumentException("Challenge no encontrado");
+        }
+
+
         var submission= new Submission(createSubmissionCommand);
         try {
             submissionRepository.save(submission);
