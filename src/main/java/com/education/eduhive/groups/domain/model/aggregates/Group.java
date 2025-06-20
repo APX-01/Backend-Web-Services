@@ -7,6 +7,7 @@ import com.education.eduhive.shared.domain.model.aggregates.AuditableAbstractAgg
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 
@@ -32,7 +33,7 @@ public class Group extends AuditableAbstractAggregateRoot<Group> {
         this.name = command.name();
         this.description = command.description();
         this.imageUrl = command.imageUrl();
-        this.joinCode = new GroupJoinCode("A1B2C3D4", new Date(1769552000000L)); // Example join code, replace with actual logic
+        this.joinCode = null;
     }
 
     public Group updateGroup(UpdateGroupCommand command) {
@@ -40,6 +41,16 @@ public class Group extends AuditableAbstractAggregateRoot<Group> {
         this.description = command.description();
         this.imageUrl = command.imageUrl();
 
+        return this;
+    }
+
+    public Group setJoinCode(GroupJoinCode joinCode) {
+        this.joinCode = joinCode;
+        return this;
+    }
+
+    public Group resetJoinCode() {
+        this.joinCode = null;
         return this;
     }
 }
