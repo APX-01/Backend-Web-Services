@@ -69,23 +69,34 @@ public class SubmissionCommandServiceImpl implements SubmissionCommandService {
 
     @Override
     public Optional<Submission> handle(UpdateSubmissionCommand updateSubmissionCommand) {
-        // 1️⃣ Validar que el challenge exista
-        if (!challengeRepository.existsById(updateSubmissionCommand.challengeId())) {
+        // 1. Validar que el challenge exista
+        var challengeOptional = challengeRepository.findById(updateSubmissionCommand.challengeId());
+        if (challengeOptional.isEmpty()) {
             throw new IllegalArgumentException("Challenge with ID " + updateSubmissionCommand.challengeId() + " not found");
         }
+        var challenge = challengeOptional.get();
 
-        // 2️⃣ Validar que el estudiante exista y sea de rol STUDENT
+        // 2. Validar que el estudiante exista y sea de rol STUDENT
         var userOptional = userRepository.findById(updateSubmissionCommand.studentId());
         if (userOptional.isEmpty()) {
             throw new IllegalArgumentException("Student with ID " + updateSubmissionCommand.studentId() + " not found");
         }
 
-        var user = userOptional.get();
-        if (!user.getRole().equals(Role.ROLE_STUDENT)) {
+        var student = userOptional.get();
+        if (!student.getRole().equals(Role.ROLE_STUDENT)) {
             throw new IllegalArgumentException("Only students can update submissions");
         }
 
-        // 3️⃣ Verificar que el submission exista
+        // 3. Validar que el estudiante pertenece al grupo del challenge
+        Long challengeGroupId = challenge.getGroupId().groupId(); // es value object
+        boolean belongsToGroup = student.getProfilesInGroups().stream()
+                .anyMatch(p -> p.getGroupId().equals(challengeGroupId));
+
+        if (!belongsToGroup) {
+            throw new IllegalArgumentException("Student does not belong to the group of this challenge");
+        }
+
+        // 4. Verificar que el submission exista
         var submissionOptional = submissionRepository.findById(updateSubmissionCommand.submissionId());
         if (submissionOptional.isEmpty()) {
             throw new IllegalArgumentException("Submission with ID " + updateSubmissionCommand.submissionId() + " not found");
@@ -93,7 +104,7 @@ public class SubmissionCommandServiceImpl implements SubmissionCommandService {
 
         var submissionToUpdate = submissionOptional.get();
 
-        // 4️⃣ Actualizar y guardar
+        // 5. Actualizar y guardar
         try {
             var updatedSubmission = submissionRepository.save(submissionToUpdate
                     .updateSubmission(
