@@ -5,6 +5,7 @@ import com.education.eduhive.submissions.domain.model.commands.DeleteSubmissionC
 import com.education.eduhive.submissions.domain.model.queries.GetAllSubmissionsQuery;
 import com.education.eduhive.submissions.domain.model.queries.GetSubmissionByIdQuery;
 import com.education.eduhive.submissions.domain.model.queries.GetSubmissionsByChallengeIdQuery;
+import com.education.eduhive.submissions.domain.model.queries.GetSubmissionsByStudentIdQuery;
 import com.education.eduhive.submissions.domain.services.SubmissionCommandService;
 import com.education.eduhive.submissions.domain.services.SubmissionQueryService;
 import com.education.eduhive.submissions.interfaces.rest.resources.CreateSubmissionResource;
@@ -150,5 +151,33 @@ public class SubmissionsController {
 
         return ResponseEntity.ok(submissionResources);
     }
+
+    @GetMapping("/students/{studentId}/submissions")
+    @Operation(summary = "Get submissions by studentId", description = "Retrieves submissions submitted by a specific student.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Submissions retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "No submissions found for the given student")
+    })
+    public ResponseEntity<List<SubmissionResource>> getSubmissionsByStudentId(@PathVariable Long studentId) {
+        //Create the query to get submissions by studentId
+        var getSubmissionsByStudentIdQuery = new GetSubmissionsByStudentIdQuery(studentId);
+
+        // Execute the query
+        var submissionsOptional = submissionQueryService.handle(getSubmissionsByStudentIdQuery);
+
+        //Verify if submissions were found
+        if (submissionsOptional.isEmpty()) {
+            return ResponseEntity.notFound().build(); // 404
+        }
+        //cada entidad de dominio (Submission) en un DTO o recurso (SubmissionResource) que es más adecuado para enviar como respuesta HTTP
+        // Convert every Submission entity to SubmissionResource (resource o DTO) to send as HTTP response
+        var resources = submissionsOptional.stream()
+                .map(SubmissionResourceFromEntityAssembler::toResourceFromEntity)
+                .toList();
+
+        return ResponseEntity.ok(resources); // 200
+    }
+
+
 
 }

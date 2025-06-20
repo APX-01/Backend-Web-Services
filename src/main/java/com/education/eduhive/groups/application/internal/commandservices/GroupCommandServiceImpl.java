@@ -25,32 +25,28 @@ public class GroupCommandServiceImpl implements GroupCommandService {
 
     @Override
     public Long handle(CreateGroupCommand command) {
-        try {
-            // 🔍 Buscar al usuario que creó el grupo
-            var teacherOptional = userRepository.findById(command.teacherId());
-            if (teacherOptional.isEmpty()) {
-                throw new IllegalArgumentException("Teacher with ID " + command.teacherId() + " not found");
-            }
-
-            var teacher = teacherOptional.get();
-
-            // ✅ Validar que tenga rol TEACHER
-            if (!teacher.getRole().equals(Role.ROLE_TEACHER)) {
-                throw new IllegalArgumentException("Only teachers can create groups");
-            }
-
-            // ✅ Crear y guardar el grupo
-            var group = new Group(command);
-            groupRepository.save(group);
-
-            // ➕ Asignar grupo al teacher
-            teacher.assignToGroup(group.getId());
-            userRepository.save(teacher);
-
-            return group.getId();
-        } catch (Exception e) {
-            throw new RuntimeException("Error while creating group", e);
+        // 🔍 Buscar al usuario que creó el grupo
+        var teacherOptional = userRepository.findById(command.teacherId());
+        if (teacherOptional.isEmpty()) {
+            throw new IllegalArgumentException("Teacher with ID " + command.teacherId() + " not found");
         }
+
+        var teacher = teacherOptional.get();
+
+        // ✅ Validar que tenga rol TEACHER
+        if (!teacher.getRole().equals(Role.ROLE_TEACHER)) {
+            throw new IllegalArgumentException("Only teachers can create groups");
+        }
+
+        // ✅ Crear y guardar el grupo
+        var group = new Group(command);
+        groupRepository.save(group);
+
+        // ➕ Asignar grupo al teacher
+        teacher.assignToGroup(group.getId());
+        userRepository.save(teacher);
+
+        return group.getId();
     }
 
     @Override
