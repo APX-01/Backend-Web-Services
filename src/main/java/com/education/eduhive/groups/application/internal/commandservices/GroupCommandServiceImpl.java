@@ -1,10 +1,8 @@
 package com.education.eduhive.groups.application.internal.commandservices;
 
 import com.education.eduhive.groups.domain.model.aggregates.Group;
-import com.education.eduhive.groups.domain.model.commands.CreateGroupCommand;
-import com.education.eduhive.groups.domain.model.commands.DeleteGroupCommand;
-import com.education.eduhive.groups.domain.model.commands.JoinGroupByCodeCommand;
-import com.education.eduhive.groups.domain.model.commands.UpdateGroupCommand;
+import com.education.eduhive.groups.domain.model.commands.*;
+import com.education.eduhive.groups.domain.model.valueobjects.GroupJoinCode;
 import com.education.eduhive.groups.domain.services.GroupCommandService;
 import com.education.eduhive.groups.infrastructure.persistence.jpa.repositories.GroupRepository;
 import com.education.eduhive.iam.domain.model.valueobjects.Role;
@@ -140,5 +138,44 @@ public class GroupCommandServiceImpl implements GroupCommandService {
         }
 
         return Optional.of(group);
+    }
+
+    @Override
+    public Optional<GroupJoinCode> handle(SetGroupJoinCodeForGroupCommand command) {
+        var group = groupRepository.findById(command.groupId());
+
+        if (group.isEmpty())
+        {
+            throw new IllegalArgumentException("Group with id " + command.groupId() + " does not exist");
+        }
+
+        var groupToUpdate = group.get();
+        var joinCodeToAdd = new GroupJoinCode(command.keycode(), command.expiration());
+        groupToUpdate.setJoinCode(joinCodeToAdd);
+
+        try {
+            groupRepository.save(groupToUpdate);
+            return Optional.of(groupToUpdate.getJoinCode());
+        } catch (Exception e) {
+            throw new RuntimeException("Error while updating join code", e);
+        }
+    }
+
+    @Override
+    public void handle(ResetGroupJoinCodeForGroupCommand command) {
+        var group = groupRepository.findById(command.groupId());
+
+        if (group.isEmpty()) {
+            throw new IllegalArgumentException("Group with id " + command.groupId() + " does not exist");
+        }
+
+        var groupToUpdate = group.get();
+        groupToUpdate.resetJoinCode();
+
+        try {
+            groupRepository.save(groupToUpdate);
+        } catch (Exception e) {
+            throw new RuntimeException("Error while removing join code", e);
+        }
     }
 }

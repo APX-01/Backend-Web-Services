@@ -33,7 +33,7 @@ public class Group extends AuditableAbstractAggregateRoot<Group> {
         this.name = command.name();
         this.description = command.description();
         this.imageUrl = command.imageUrl();
-        this.joinCode = new GroupJoinCode("A1B2C3D4", new Date(1769552000000L)); // Example join code, replace with actual logic
+        this.joinCode = null;
     }
 
     public Group updateGroup(UpdateGroupCommand command) {

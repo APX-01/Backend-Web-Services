@@ -3,6 +3,8 @@ package com.education.eduhive.groups.application.internal.queryservices;
 import com.education.eduhive.groups.domain.model.aggregates.Group;
 import com.education.eduhive.groups.domain.model.queries.GetAllGroupsQuery;
 import com.education.eduhive.groups.domain.model.queries.GetGroupByIdQuery;
+import com.education.eduhive.groups.domain.model.queries.GetGroupJoinCodeByGroupId;
+import com.education.eduhive.groups.domain.model.valueobjects.GroupJoinCode;
 import com.education.eduhive.groups.domain.services.GroupQueryService;
 import com.education.eduhive.groups.infrastructure.persistence.jpa.repositories.GroupRepository;
 import org.springframework.stereotype.Service;
@@ -27,5 +29,12 @@ public class GroupQueryServiceImpl implements GroupQueryService {
     @Override
     public Optional<Group> handle(GetGroupByIdQuery query) {
         return groupRepository.findById(query.id());
+    }
+
+    @Override
+    public Optional<GroupJoinCode> handle(GetGroupJoinCodeByGroupId query) {
+        var group = groupRepository.findById(query.groupId());
+
+        return group.map(Group::getJoinCode);
     }
 }
