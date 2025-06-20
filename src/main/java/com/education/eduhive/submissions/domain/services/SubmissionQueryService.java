@@ -4,6 +4,7 @@ import com.education.eduhive.submissions.domain.model.aggregates.Submission;
 import com.education.eduhive.submissions.domain.model.queries.GetAllSubmissionsQuery;
 import com.education.eduhive.submissions.domain.model.queries.GetSubmissionByIdQuery;
 import com.education.eduhive.submissions.domain.model.queries.GetSubmissionsByChallengeIdQuery;
+import com.education.eduhive.submissions.domain.model.queries.GetSubmissionsByStudentIdQuery;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,4 +17,5 @@ public interface SubmissionQueryService {
 
     List<Submission> handle(GetSubmissionsByChallengeIdQuery getSubmissionsByChallengeIdQuery);
 
+    List<Submission> handle(GetSubmissionsByStudentIdQuery getSubmissionsByStudentIdQuery);
 }

@@ -4,7 +4,9 @@ import com.education.eduhive.submissions.domain.model.aggregates.Submission;
 import com.education.eduhive.submissions.domain.model.queries.GetAllSubmissionsQuery;
 import com.education.eduhive.submissions.domain.model.queries.GetSubmissionByIdQuery;
 import com.education.eduhive.submissions.domain.model.queries.GetSubmissionsByChallengeIdQuery;
+import com.education.eduhive.submissions.domain.model.queries.GetSubmissionsByStudentIdQuery;
 import com.education.eduhive.submissions.domain.model.valueobjects.ChallengeId;
+import com.education.eduhive.submissions.domain.model.valueobjects.StudentId;
 import com.education.eduhive.submissions.domain.services.SubmissionQueryService;
 import com.education.eduhive.submissions.infrastructure.persistence.jpa.respositories.SubmissionRepository;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import java.util.Optional;
 public class SubmissionQueryServiceImpl implements SubmissionQueryService {
 
     private final SubmissionRepository submissionRepository;
+
 
     public SubmissionQueryServiceImpl(SubmissionRepository submissionRepository) {
         this.submissionRepository = submissionRepository;
@@ -37,5 +40,10 @@ public class SubmissionQueryServiceImpl implements SubmissionQueryService {
     public List<Submission> handle(GetSubmissionsByChallengeIdQuery getSubmissionsByChallengeIdQuery) {
         //es de esta manera porque ChallengeId es un ValueObject
         return submissionRepository.findByChallengeId(new ChallengeId(getSubmissionsByChallengeIdQuery.challengeId()));
+    }
+
+    @Override
+    public List<Submission> handle(GetSubmissionsByStudentIdQuery getSubmissionsByStudentIdQuery) {
+        return submissionRepository.findByStudentId(new StudentId(getSubmissionsByStudentIdQuery.studentId()));
     }
 }

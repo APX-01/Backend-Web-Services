@@ -1,6 +1,8 @@
 package com.education.eduhive.submissions.application.internal.commandservices;
 
 import com.education.eduhive.challenges.infrastructure.persistence.jpa.repositories.ChallengeRepository;
+import com.education.eduhive.iam.domain.model.valueobjects.Role;
+import com.education.eduhive.iam.infrastructure.persistence.jpa.repositories.UserRepository;
 import com.education.eduhive.submissions.domain.model.aggregates.Submission;
 import com.education.eduhive.submissions.domain.model.commands.CreateSubmissionCommand;
 import com.education.eduhive.submissions.domain.model.commands.DeleteSubmissionCommand;
@@ -16,21 +18,44 @@ public class SubmissionCommandServiceImpl implements SubmissionCommandService {
 
     private final SubmissionRepository submissionRepository;
     private final ChallengeRepository challengeRepository;
+    private final UserRepository userRepository;
 
-    public SubmissionCommandServiceImpl(SubmissionRepository submissionRepository,ChallengeRepository challengeRepository) {
+    public SubmissionCommandServiceImpl(SubmissionRepository submissionRepository,ChallengeRepository challengeRepository,UserRepository userRepository) {
         this.submissionRepository = submissionRepository;
         this.challengeRepository = challengeRepository;
+        this.userRepository= userRepository;
     }
 
     @Override
     public Long handle(CreateSubmissionCommand createSubmissionCommand) {
 
-        // Validación cruzada entre BCs
-        if (!challengeRepository.existsById(createSubmissionCommand.challengeId())) {
-            throw new IllegalArgumentException("Challenge no encontrado");
+        // 1. Verificar que el Challenge existe
+        var challengeOptional = challengeRepository.findById(createSubmissionCommand.challengeId());
+        if (challengeOptional.isEmpty()) {
+            throw new IllegalArgumentException("Challenge with ID " + createSubmissionCommand.challengeId() + " not found");
+        }
+        var challenge = challengeOptional.get();
+
+        // 2. Verificar que el usuario existe y sea estudiante
+        var optionalUser = userRepository.findById(createSubmissionCommand.studentId());
+        if (optionalUser.isEmpty()) {
+            throw new IllegalArgumentException("Student no encontrado");
+        }
+        var user = optionalUser.get();
+        if (user.getRole() != Role.ROLE_STUDENT) {
+            throw new IllegalStateException("Solo un usuario con rol STUDENT puede crear un submission");
         }
 
+        // 3. Obtener el grupo al que pertenece el challenge
+        Long challengeGroupId = challenge.getGroupId().groupId(); // ⚠️ usa el value object GroupId
+        boolean belongsToGroup = user.getProfilesInGroups().stream()
+                .anyMatch(profile -> profile.getGroupId().equals(challengeGroupId));
 
+        if (!belongsToGroup) {
+            throw new IllegalArgumentException("Student does not belong to the group of this challenge");
+        }
+
+        // 4. Crear la Submission
         var submission= new Submission(createSubmissionCommand);
         try {
             submissionRepository.save(submission);
@@ -44,25 +69,40 @@ public class SubmissionCommandServiceImpl implements SubmissionCommandService {
 
     @Override
     public Optional<Submission> handle(UpdateSubmissionCommand updateSubmissionCommand) {
-        var submission = submissionRepository.findById(updateSubmissionCommand.submissionId());
-        if (submission.isEmpty()) {
-            throw new IllegalArgumentException("Submission with ID " + updateSubmissionCommand.submissionId() + " not found");
-        }
-
-        // Validación cruzada entre BCs
+        // 1️⃣ Validar que el challenge exista
         if (!challengeRepository.existsById(updateSubmissionCommand.challengeId())) {
             throw new IllegalArgumentException("Challenge with ID " + updateSubmissionCommand.challengeId() + " not found");
         }
 
-        var submissionToUpdate = submission.get();
-        try{
-            var updatedSubmission= submissionRepository.save(submissionToUpdate
+        // 2️⃣ Validar que el estudiante exista y sea de rol STUDENT
+        var userOptional = userRepository.findById(updateSubmissionCommand.studentId());
+        if (userOptional.isEmpty()) {
+            throw new IllegalArgumentException("Student with ID " + updateSubmissionCommand.studentId() + " not found");
+        }
+
+        var user = userOptional.get();
+        if (!user.getRole().equals(Role.ROLE_STUDENT)) {
+            throw new IllegalArgumentException("Only students can update submissions");
+        }
+
+        // 3️⃣ Verificar que el submission exista
+        var submissionOptional = submissionRepository.findById(updateSubmissionCommand.submissionId());
+        if (submissionOptional.isEmpty()) {
+            throw new IllegalArgumentException("Submission with ID " + updateSubmissionCommand.submissionId() + " not found");
+        }
+
+        var submissionToUpdate = submissionOptional.get();
+
+        // 4️⃣ Actualizar y guardar
+        try {
+            var updatedSubmission = submissionRepository.save(submissionToUpdate
                     .updateSubmission(
                             updateSubmissionCommand.challengeId(),
                             updateSubmissionCommand.studentId(),
                             updateSubmissionCommand.content(),
                             updateSubmissionCommand.score(),
-                            updateSubmissionCommand.imageUrl()));
+                            updateSubmissionCommand.imageUrl()
+                    ));
             return Optional.of(updatedSubmission);
         } catch (Exception e) {
             throw new RuntimeException("Error updating submission: " + e.getMessage(), e);
@@ -80,4 +120,6 @@ public class SubmissionCommandServiceImpl implements SubmissionCommandService {
             throw new RuntimeException("Error deleting submission: " + e.getMessage(), e);
         }
     }
+
+
 }
