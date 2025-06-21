@@ -21,6 +21,12 @@ public class UserCommandServiceImpl implements UserCommandService {
 
     @Override
     public Optional<User> handle(CreateUserCommand createUserCommand) {
+
+        //Check if a user with the same email already exists
+        if (userRepository.existsByEmail(createUserCommand.email())) {
+            throw new IllegalArgumentException("User with email " + createUserCommand.email() + " already exists");
+        }
+
         var user = new User(createUserCommand);
 
         try{
@@ -37,6 +43,12 @@ public class UserCommandServiceImpl implements UserCommandService {
         var userOptional = userRepository.findById(updateUserCommand.userId());
         if (userOptional.isEmpty()) {
             throw new IllegalArgumentException("User with ID " + updateUserCommand.userId() + " not found");
+        }
+
+        //Check if a user with the same email already exists
+        var existingUserWithEmail = userRepository.findByEmail(updateUserCommand.email());
+        if (existingUserWithEmail.isPresent() && !existingUserWithEmail.get().getId().equals(updateUserCommand.userId())) {
+            throw new IllegalArgumentException("User with email " + updateUserCommand.email() + " already exists");
         }
 
         var userToUpdate = userOptional.get();
