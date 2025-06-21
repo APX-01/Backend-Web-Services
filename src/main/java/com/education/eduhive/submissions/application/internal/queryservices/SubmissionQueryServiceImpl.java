@@ -1,10 +1,7 @@
 package com.education.eduhive.submissions.application.internal.queryservices;
 
 import com.education.eduhive.submissions.domain.model.aggregates.Submission;
-import com.education.eduhive.submissions.domain.model.queries.GetAllSubmissionsQuery;
-import com.education.eduhive.submissions.domain.model.queries.GetSubmissionByIdQuery;
-import com.education.eduhive.submissions.domain.model.queries.GetSubmissionsByChallengeIdQuery;
-import com.education.eduhive.submissions.domain.model.queries.GetSubmissionsByStudentIdQuery;
+import com.education.eduhive.submissions.domain.model.queries.*;
 import com.education.eduhive.submissions.domain.model.valueobjects.ChallengeId;
 import com.education.eduhive.submissions.domain.model.valueobjects.StudentId;
 import com.education.eduhive.submissions.domain.services.SubmissionQueryService;
@@ -45,5 +42,10 @@ public class SubmissionQueryServiceImpl implements SubmissionQueryService {
     @Override
     public List<Submission> handle(GetSubmissionsByStudentIdQuery getSubmissionsByStudentIdQuery) {
         return submissionRepository.findByStudentId(new StudentId(getSubmissionsByStudentIdQuery.studentId()));
+    }
+
+    @Override
+    public List<Submission> handle(GetSubmissionsByStudentIdAndChallengeIdQuery getSubmissionsByStudentIdAndChallengeIdQuery) {
+        return submissionRepository.findByStudentIdAndChallengeId(new StudentId(getSubmissionsByStudentIdAndChallengeIdQuery.studentId()),new ChallengeId(getSubmissionsByStudentIdAndChallengeIdQuery.challengeId()));
     }
 }
