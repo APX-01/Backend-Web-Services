@@ -207,7 +207,7 @@ public class UserController {
             @ApiResponse(responseCode = "204", description = "User left the group successfully"),
             @ApiResponse(responseCode = "404", description = "Group or user not found")
     })
-    public ResponseEntity<Void> leaveGroup(@PathVariable Long groupId, @RequestParam Long userId) {
+    public ResponseEntity<Void> leaveGroup(@PathVariable Long groupId, @PathVariable Long userId) {
         // Create the command to leave the group
         LeaveGroupCommand leaveGroupCommand = new LeaveGroupCommand(userId, groupId);
 
