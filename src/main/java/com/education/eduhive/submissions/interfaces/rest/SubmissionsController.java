@@ -175,7 +175,7 @@ public class SubmissionsController {
         return ResponseEntity.ok(resources); // 200
     }
 
-    @GetMapping("/students/{studentId}/submissions/challenges/{challengeId}")
+    @GetMapping("/students/{studentId}/challenges/{challengeId}")
     @Operation(summary = "Get submissions by studentId and challengeId", description = "Retrieves submissions submitted by a specific student for a specific challenge.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Submissions retrieved successfully"),
