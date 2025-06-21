@@ -2,10 +2,7 @@ package com.education.eduhive.submissions.interfaces.rest;
 
 import com.education.eduhive.submissions.domain.model.aggregates.Submission;
 import com.education.eduhive.submissions.domain.model.commands.DeleteSubmissionCommand;
-import com.education.eduhive.submissions.domain.model.queries.GetAllSubmissionsQuery;
-import com.education.eduhive.submissions.domain.model.queries.GetSubmissionByIdQuery;
-import com.education.eduhive.submissions.domain.model.queries.GetSubmissionsByChallengeIdQuery;
-import com.education.eduhive.submissions.domain.model.queries.GetSubmissionsByStudentIdQuery;
+import com.education.eduhive.submissions.domain.model.queries.*;
 import com.education.eduhive.submissions.domain.services.SubmissionCommandService;
 import com.education.eduhive.submissions.domain.services.SubmissionQueryService;
 import com.education.eduhive.submissions.interfaces.rest.resources.CreateSubmissionResource;
@@ -176,6 +173,32 @@ public class SubmissionsController {
                 .toList();
 
         return ResponseEntity.ok(resources); // 200
+    }
+
+    @GetMapping("/students/{studentId}/submissions/challenges/{challengeId}")
+    @Operation(summary = "Get submissions by studentId and challengeId", description = "Retrieves submissions submitted by a specific student for a specific challenge.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Submissions retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "No submissions found for the given student and challenge")
+    })
+    public ResponseEntity<List<SubmissionResource>> getSubmissionsByStudentIdAndChallengeId(@PathVariable Long studentId, @PathVariable Long challengeId) {
+        // Create the query
+        var getSubmissionsByStudentIdAndChallengeIdQuery = new GetSubmissionsByStudentIdAndChallengeIdQuery(studentId, challengeId);
+
+        // Execute the query
+        var submissionsOptional = submissionQueryService.handle(getSubmissionsByStudentIdAndChallengeIdQuery);
+
+        // Verify if submissions were found
+        if (submissionsOptional.isEmpty()) {
+            return ResponseEntity.notFound().build(); // 404 Not Found
+        }
+
+        // Convert every Submission entity to SubmissionResource (resource o DTO) to send as HTTP response
+        var submissionResources = submissionsOptional.stream()
+                .map(SubmissionResourceFromEntityAssembler::toResourceFromEntity)
+                .toList();
+
+        return ResponseEntity.ok(submissionResources); // 200 OK
     }
 
 
