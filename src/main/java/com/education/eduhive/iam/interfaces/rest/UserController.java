@@ -243,7 +243,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("/{groupId}")
+    @GetMapping("/group/{groupId}")
     @Operation(summary = "Get users by group ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
