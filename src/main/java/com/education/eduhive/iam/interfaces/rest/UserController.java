@@ -201,7 +201,7 @@ public class UserController {
         }
     }
 
-    @DeleteMapping("/leave/{groupId}")
+    @DeleteMapping("/leave/{userId}/{groupId}")
     @Operation(summary = "Leave a group", description = "Allows a user to leave a group by providing the group ID and user ID.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "User left the group successfully"),
