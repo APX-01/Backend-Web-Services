@@ -208,14 +208,17 @@ public class SubmissionsController {
             @ApiResponse(responseCode = "400", description = "Invalid input data"),
             @ApiResponse(responseCode = "404", description = "No submissions found for the given student and group")
     })
-    public ResponseEntity<List<Submission>> getSubmissionsByStudentIdAndGroupId(
+    public ResponseEntity<List<SubmissionResource>> getSubmissionsByStudentIdAndGroupId(
             @PathVariable Long studentId,
             @PathVariable Long groupId) {
 
         try {
             GetSubmissionsByStudentIdAndGroupIdQuery getSubmissionsByStudentIdAndGroupIdQuery = new GetSubmissionsByStudentIdAndGroupIdQuery(studentId, groupId);
-            List<Submission> submissions = submissionQueryService.handle(getSubmissionsByStudentIdAndGroupIdQuery);
-            return ResponseEntity.ok(submissions);
+            var submissions = submissionQueryService.handle(getSubmissionsByStudentIdAndGroupIdQuery);
+            var resources = submissions.stream()
+                    .map(SubmissionResourceFromEntityAssembler::toResourceFromEntity)
+                    .toList();
+            return ResponseEntity.ok(resources);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(null);
         } catch (Exception e) {
