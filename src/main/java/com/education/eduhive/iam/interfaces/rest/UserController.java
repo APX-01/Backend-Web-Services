@@ -2,6 +2,7 @@ package com.education.eduhive.iam.interfaces.rest;
 
 import com.education.eduhive.iam.domain.model.commads.CreateUserCommand;
 import com.education.eduhive.iam.domain.model.commads.DeleteUserCommand;
+import com.education.eduhive.iam.domain.model.commads.LeaveGroupCommand;
 import com.education.eduhive.iam.domain.model.commads.UpdateUserCommand;
 import com.education.eduhive.iam.domain.model.queries.GetAllUsersQuery;
 import com.education.eduhive.iam.domain.model.queries.GetUserByEmailAndPasswordQuery;
@@ -199,5 +200,18 @@ public class UserController {
         } else {
             return ResponseEntity.notFound().build(); // 404 Not Found
         }
+    }
+
+    @DeleteMapping("/leave/{groupId}")
+    @Operation(summary = "Leave a group", description = "Allows a user to leave a group by providing the group ID and user ID.")
+
+    public ResponseEntity<Void> leaveGroup(@PathVariable Long groupId, @RequestParam Long userId) {
+        // Create the command to leave the group
+        LeaveGroupCommand leaveGroupCommand = new LeaveGroupCommand(userId, groupId);
+
+        // Execute the command
+        userCommandService.handle(leaveGroupCommand);
+
+        return ResponseEntity.noContent().build(); // 204
     }
 }

@@ -1,19 +1,14 @@
 package com.education.eduhive.groups.interfaces.rest;
 
 import com.education.eduhive.groups.domain.model.commands.DeleteGroupCommand;
+import com.education.eduhive.groups.domain.model.commands.JoinGroupByCodeCommand;
 import com.education.eduhive.groups.domain.model.queries.GetAllGroupsQuery;
 import com.education.eduhive.groups.domain.model.queries.GetGroupByIdQuery;
 import com.education.eduhive.groups.domain.model.queries.GetGroupsByUserIdQuery;
 import com.education.eduhive.groups.domain.services.GroupCommandService;
 import com.education.eduhive.groups.domain.services.GroupQueryService;
-import com.education.eduhive.groups.interfaces.rest.resources.CreateGroupResource;
-import com.education.eduhive.groups.interfaces.rest.resources.GroupResource;
-import com.education.eduhive.groups.interfaces.rest.resources.JoinGroupResource;
-import com.education.eduhive.groups.interfaces.rest.resources.UpdateGroupResource;
-import com.education.eduhive.groups.interfaces.rest.transform.CreateGroupCommandFromResourceAssembler;
-import com.education.eduhive.groups.interfaces.rest.transform.GroupResourceFromEntityAssembler;
-import com.education.eduhive.groups.interfaces.rest.transform.JoinGroupByCodeCommandFromResourceAssembler;
-import com.education.eduhive.groups.interfaces.rest.transform.UpdateGroupCommandFromResourceAssembler;
+import com.education.eduhive.groups.interfaces.rest.resources.*;
+import com.education.eduhive.groups.interfaces.rest.transform.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -62,6 +57,42 @@ public class GroupsController {
         var groupEntity = group.get();
         var groupResponse = GroupResourceFromEntityAssembler.toResourceFromEntity(groupEntity);
         return new ResponseEntity<>(groupResponse, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/teacher/{teacherId}")
+    @Operation(summary = "Create a Group by teacher", description = "Creates a group by a teacher")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(responseCode = "201", description = "Group Created Successfully"),
+                    @ApiResponse(responseCode = "404", description = "Invalid input data")
+            }
+    )
+    public ResponseEntity<GroupResource> createGroupByTeacher(@RequestBody CreateGroupByTeacherResource createGroupByTeacherResource, @PathVariable Long teacherId) {
+        // Create the command from the resource
+        var createGroupCommand= CreateGroupByTeacherCommandFromResourceAssembler.toCommandFromResource(createGroupByTeacherResource, teacherId);
+
+        // Execute the command using the groupCommandService
+        var idOptional = groupCommandService.handle(createGroupCommand);
+
+        if (idOptional==null || idOptional <= 0L) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        // Retrieve the created group
+        var getGroupByIdQuery = new GetGroupByIdQuery(idOptional);
+
+        var group = groupQueryService.handle(getGroupByIdQuery);
+
+        if (group.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // Convert the group entity to a resource
+        var groupEntity = group.get();
+        var groupResponse = GroupResourceFromEntityAssembler.toResourceFromEntity(groupEntity);
+        return new ResponseEntity<>(groupResponse, HttpStatus.CREATED);
+
+
     }
 
     @GetMapping
@@ -141,25 +172,22 @@ public class GroupsController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/join")
+    @PostMapping("/join/{userId}/{key}")
     @Operation(summary = "Join a group via join code")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Joined group successfully"),
             @ApiResponse(responseCode = "404", description = "Group not found")
     })
-    public ResponseEntity<GroupResource> joinGroup(@RequestBody JoinGroupResource joinGroupResource) {
-        // Convertir el recurso al comando con el Assembler
-        var joinGroupByCodeCommand = JoinGroupByCodeCommandFromResourceAssembler.toCommandFromResource(joinGroupResource);
+    public ResponseEntity<GroupResource> joinGroup(
+            @PathVariable Long userId,
+            @PathVariable String key
+    ) {
+        var command = new JoinGroupByCodeCommand(userId, key);
+        var groupOptional = groupCommandService.handle(command);
 
-        // Ejecutar el comando
-        var groupOptional = groupCommandService.handle(joinGroupByCodeCommand);
-
-        if (groupOptional.isPresent()) {
-            var groupResource = GroupResourceFromEntityAssembler.toResourceFromEntity(groupOptional.get());
-            return ResponseEntity.ok(groupResource); // 200 OK
-        } else {
-            return ResponseEntity.badRequest().build(); // 400 Bad Request
-        }
+        return groupOptional
+                .map(group -> ResponseEntity.ok(GroupResourceFromEntityAssembler.toResourceFromEntity(group)))
+                .orElseGet(() -> ResponseEntity.badRequest().build());
     }
 
     @GetMapping("/user/{userId}")

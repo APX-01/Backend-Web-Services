@@ -14,4 +14,6 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
 
     List<Group> findAllByIdIn(List<Long> ids);
 
+    boolean existsByJoinCode_Key(String keycode);
+
 }

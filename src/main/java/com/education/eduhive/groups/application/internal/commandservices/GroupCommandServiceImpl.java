@@ -137,27 +137,26 @@ public class GroupCommandServiceImpl implements GroupCommandService {
     }
 
     @Override
-    public Optional<GroupJoinCode> handle(SetGroupJoinCodeForGroupCommand command) {
+    public Optional<GroupJoinCode> handle(SetGroupJoinCodeForGroupCommand setGroupJoinCodeForGroupCommand) {
 
-        //Check if the group exists
-        var group = groupRepository.findById(command.groupId());
-
-        if (group.isEmpty())
-        {
-            throw new IllegalArgumentException("Group with id " + command.groupId() + " does not exist");
+        // check if the group exists
+        var groupOptional = groupRepository.findById(setGroupJoinCodeForGroupCommand.groupId());
+        if (groupOptional.isEmpty()) {
+            throw new IllegalArgumentException("Group with ID " + setGroupJoinCodeForGroupCommand.groupId() + " does not exist");
         }
 
-        // 1. Validar que la key no esté repetida en otros grupos
-        var existingGroupWithCode = groupRepository.findByJoinCode_Key(command.keycode());
-        if (existingGroupWithCode.isPresent() && !existingGroupWithCode.get().getId().equals(command.groupId())) {
-            throw new IllegalArgumentException("The key '" + command.keycode() + "' is already assigned to another group.");
+        var groupToUpdate = groupOptional.get();
+
+        // Validar que ningún grupo tenga ese key
+        if (groupRepository.existsByJoinCode_Key(setGroupJoinCodeForGroupCommand.keycode())) {
+            throw new IllegalArgumentException("The key '" + setGroupJoinCodeForGroupCommand.keycode() + "' is already assigned to a group.");
         }
 
-        // 2. Assign the join code to the group
-        var groupToUpdate = group.get();
-        var joinCodeToAdd = new GroupJoinCode(command.keycode(), command.expiration());
+        // Update the group with the new join code
+        var joinCodeToAdd = new GroupJoinCode(setGroupJoinCodeForGroupCommand.keycode(), setGroupJoinCodeForGroupCommand.expiration());
         groupToUpdate.setJoinCode(joinCodeToAdd);
 
+        // Save the updated group
         try {
             groupRepository.save(groupToUpdate);
             return Optional.of(groupToUpdate.getJoinCode());
@@ -183,4 +182,6 @@ public class GroupCommandServiceImpl implements GroupCommandService {
             throw new RuntimeException("Error while removing join code", e);
         }
     }
+
+
 }

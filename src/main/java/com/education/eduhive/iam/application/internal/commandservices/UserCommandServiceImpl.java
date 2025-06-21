@@ -3,6 +3,7 @@ package com.education.eduhive.iam.application.internal.commandservices;
 import com.education.eduhive.iam.domain.model.aggregates.User;
 import com.education.eduhive.iam.domain.model.commads.CreateUserCommand;
 import com.education.eduhive.iam.domain.model.commads.DeleteUserCommand;
+import com.education.eduhive.iam.domain.model.commads.LeaveGroupCommand;
 import com.education.eduhive.iam.domain.model.commads.UpdateUserCommand;
 import com.education.eduhive.iam.domain.services.UserCommandService;
 import com.education.eduhive.iam.infrastructure.persistence.jpa.repositories.UserRepository;
@@ -73,5 +74,28 @@ public class UserCommandServiceImpl implements UserCommandService {
             // Handle exception, e.g., log it or rethrow as a custom exception
             throw new RuntimeException("Error deleting user: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public Optional<User> handle(LeaveGroupCommand leaveGroupCommand) {
+        // Check if the user exists
+        var userOptional = userRepository.findById(leaveGroupCommand.userId());
+        if (userOptional.isEmpty()) {
+            throw new IllegalArgumentException("User with ID " + leaveGroupCommand.userId() + " not found");
+        }
+
+        // Check if the group ID is valid
+        var user = userOptional.get();
+        user.removeFromGroup(leaveGroupCommand.groupId());
+
+        // Save the updated user
+        try {
+            userRepository.save(user);
+            return Optional.of(user);
+        } catch (Exception e) {
+            throw new RuntimeException("Error while removing user from group", e);
+        }
+
+
     }
 }

@@ -21,4 +21,6 @@ public interface GroupCommandService {
 
     void handle(ResetGroupJoinCodeForGroupCommand command);
 
+
+
 }
