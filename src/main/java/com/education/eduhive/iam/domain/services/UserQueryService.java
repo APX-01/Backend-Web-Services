@@ -1,10 +1,8 @@
 package com.education.eduhive.iam.domain.services;
 
 import com.education.eduhive.iam.domain.model.aggregates.User;
-import com.education.eduhive.iam.domain.model.queries.GetAllUsersQuery;
-import com.education.eduhive.iam.domain.model.queries.GetUserByEmailAndPasswordQuery;
-import com.education.eduhive.iam.domain.model.queries.GetUserByEmailQuery;
-import com.education.eduhive.iam.domain.model.queries.GetUserByIdQuery;
+import com.education.eduhive.iam.domain.model.queries.*;
+import com.education.eduhive.iam.domain.model.valueobjects.ProfileInGroup;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,4 +15,6 @@ public interface UserQueryService {
     Optional<User> handle(GetUserByEmailAndPasswordQuery getUserByEmailAndPasswordQuery);
 
     Optional<User> handle(GetUserByEmailQuery getUserByEmailQuery);
+
+    Optional<ProfileInGroup> handle(GetProfilesInGroupsByGroupIdAndStudentIdQuery getProfilesInGroupsByGroupIdAndStudentIdQuery);
 }

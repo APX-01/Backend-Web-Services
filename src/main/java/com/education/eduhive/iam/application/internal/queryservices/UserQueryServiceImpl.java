@@ -1,10 +1,8 @@
 package com.education.eduhive.iam.application.internal.queryservices;
 
 import com.education.eduhive.iam.domain.model.aggregates.User;
-import com.education.eduhive.iam.domain.model.queries.GetAllUsersQuery;
-import com.education.eduhive.iam.domain.model.queries.GetUserByEmailAndPasswordQuery;
-import com.education.eduhive.iam.domain.model.queries.GetUserByEmailQuery;
-import com.education.eduhive.iam.domain.model.queries.GetUserByIdQuery;
+import com.education.eduhive.iam.domain.model.queries.*;
+import com.education.eduhive.iam.domain.model.valueobjects.ProfileInGroup;
 import com.education.eduhive.iam.domain.services.UserQueryService;
 import com.education.eduhive.iam.infrastructure.persistence.jpa.repositories.UserRepository;
 import org.springframework.stereotype.Service;
@@ -39,5 +37,15 @@ public class UserQueryServiceImpl implements UserQueryService {
     @Override
     public Optional<User> handle(GetUserByEmailQuery getUserByEmailQuery) {
         return userRepository.findByEmail(getUserByEmailQuery.email());
+    }
+
+    @Override
+    public Optional<ProfileInGroup> handle(GetProfilesInGroupsByGroupIdAndStudentIdQuery query) {
+        return userRepository.findById(query.studentId())
+                .map(User::getProfilesInGroups)
+                .orElse(List.of())
+                .stream()
+                .filter(p -> p.getGroupId().equals(query.groupId()))
+                .findFirst(); // ✅ Solo el primero, como Optional
     }
 }

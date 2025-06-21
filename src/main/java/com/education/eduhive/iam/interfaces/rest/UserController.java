@@ -4,16 +4,15 @@ import com.education.eduhive.iam.domain.model.commads.CreateUserCommand;
 import com.education.eduhive.iam.domain.model.commads.DeleteUserCommand;
 import com.education.eduhive.iam.domain.model.commads.LeaveGroupCommand;
 import com.education.eduhive.iam.domain.model.commads.UpdateUserCommand;
-import com.education.eduhive.iam.domain.model.queries.GetAllUsersQuery;
-import com.education.eduhive.iam.domain.model.queries.GetUserByEmailAndPasswordQuery;
-import com.education.eduhive.iam.domain.model.queries.GetUserByEmailQuery;
-import com.education.eduhive.iam.domain.model.queries.GetUserByIdQuery;
+import com.education.eduhive.iam.domain.model.queries.*;
 import com.education.eduhive.iam.domain.services.UserCommandService;
 import com.education.eduhive.iam.domain.services.UserQueryService;
 import com.education.eduhive.iam.interfaces.rest.resources.CreateUserResource;
+import com.education.eduhive.iam.interfaces.rest.resources.ProfileInGroupsResource;
 import com.education.eduhive.iam.interfaces.rest.resources.UserResource;
 import com.education.eduhive.iam.interfaces.rest.resources.UpdateUserResource;
 import com.education.eduhive.iam.interfaces.rest.transform.CreateUserCommandFromResourceAssembler;
+import com.education.eduhive.iam.interfaces.rest.transform.ProfileInGroupsResourceFromEntityAssembler;
 import com.education.eduhive.iam.interfaces.rest.transform.UserResourceFromEntityAssembler;
 import com.education.eduhive.iam.interfaces.rest.transform.UpdateUserCommandFromResourceAssembler;
 import io.swagger.v3.oas.annotations.Operation;
@@ -204,7 +203,10 @@ public class UserController {
 
     @DeleteMapping("/leave/{groupId}")
     @Operation(summary = "Leave a group", description = "Allows a user to leave a group by providing the group ID and user ID.")
-
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "User left the group successfully"),
+            @ApiResponse(responseCode = "404", description = "Group or user not found")
+    })
     public ResponseEntity<Void> leaveGroup(@PathVariable Long groupId, @RequestParam Long userId) {
         // Create the command to leave the group
         LeaveGroupCommand leaveGroupCommand = new LeaveGroupCommand(userId, groupId);
@@ -214,4 +216,31 @@ public class UserController {
 
         return ResponseEntity.noContent().build(); // 204
     }
+
+    @GetMapping("/user/{userId}/profiles/{groupId}")
+    @Operation(summary = "Get user profiles in a group", description = "Retrieves the profiles of a user in a specific group.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User profiles retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "User or group not found")
+    })
+    public ResponseEntity<ProfileInGroupsResource> getProfilesInGroups(@PathVariable Long groupId, @PathVariable Long userId) {
+        // Create the query to get user profiles in a group
+        GetProfilesInGroupsByGroupIdAndStudentIdQuery getProfilesInGroupsByGroupIdAndStudentIdQuery =new GetProfilesInGroupsByGroupIdAndStudentIdQuery(groupId, userId);
+
+        // Execute the query
+        var profileOptional = userQueryService.handle(getProfilesInGroupsByGroupIdAndStudentIdQuery);
+
+
+        // Check if the profiles were found
+        if (profileOptional.isPresent()) {
+            var profile= profileOptional.get();
+
+            var profileResource = ProfileInGroupsResourceFromEntityAssembler.toResourceFromEntity(profile);
+
+            return ResponseEntity.ok(profileResource);
+        } else {
+            return ResponseEntity.notFound().build(); // 404 Not Found
+        }
+    }
+
 }
