@@ -4,6 +4,7 @@ import com.education.eduhive.groups.domain.model.commands.DeleteGroupCommand;
 import com.education.eduhive.groups.domain.model.commands.JoinGroupByCodeCommand;
 import com.education.eduhive.groups.domain.model.queries.GetAllGroupsQuery;
 import com.education.eduhive.groups.domain.model.queries.GetGroupByIdQuery;
+import com.education.eduhive.groups.domain.model.queries.GetGroupByKeyQuery;
 import com.education.eduhive.groups.domain.model.queries.GetGroupsByUserIdQuery;
 import com.education.eduhive.groups.domain.services.GroupCommandService;
 import com.education.eduhive.groups.domain.services.GroupQueryService;
@@ -213,5 +214,23 @@ public class GroupsController {
                 .map(GroupResourceFromEntityAssembler::toResourceFromEntity)
                 .toList();
         return ResponseEntity.ok(groupResponse);
+    }
+
+    @GetMapping("/groupJoinCode/{key}")
+    @Operation(summary = "Get group by join code key")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Group retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Group not found")
+    })
+    public ResponseEntity<GroupResource> getGroupByKey(@PathVariable String key) {
+        // Create the query to get group by join code key
+        var getGroupByKeyQuery = new GetGroupByKeyQuery(key);
+
+        // Execute the query using the groupQueryService
+        var groupOptional = groupQueryService.handle(getGroupByKeyQuery);
+
+        return groupOptional
+                .map(group -> ResponseEntity.ok(GroupResourceFromEntityAssembler.toResourceFromEntity(group)))
+                .orElse(ResponseEntity.notFound().build());
     }
 }

@@ -1,10 +1,7 @@
 package com.education.eduhive.groups.application.internal.queryservices;
 
 import com.education.eduhive.groups.domain.model.aggregates.Group;
-import com.education.eduhive.groups.domain.model.queries.GetAllGroupsQuery;
-import com.education.eduhive.groups.domain.model.queries.GetGroupByIdQuery;
-import com.education.eduhive.groups.domain.model.queries.GetGroupJoinCodeByGroupId;
-import com.education.eduhive.groups.domain.model.queries.GetGroupsByUserIdQuery;
+import com.education.eduhive.groups.domain.model.queries.*;
 import com.education.eduhive.groups.domain.model.valueobjects.GroupJoinCode;
 import com.education.eduhive.groups.domain.services.GroupQueryService;
 import com.education.eduhive.groups.infrastructure.persistence.jpa.repositories.GroupRepository;
@@ -59,5 +56,10 @@ public class GroupQueryServiceImpl implements GroupQueryService {
                 .toList();
 
         return groupRepository.findAllByIdIn(userIds);
+    }
+
+    @Override
+    public Optional<Group> handle(GetGroupByKeyQuery getGroupByKeyQuery) {
+        return groupRepository.findByJoinCode_Key(getGroupByKeyQuery.key());
     }
 }

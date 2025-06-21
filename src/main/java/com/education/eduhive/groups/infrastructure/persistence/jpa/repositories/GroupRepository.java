@@ -16,4 +16,5 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
 
     boolean existsByJoinCode_Key(String keycode);
 
+
 }
