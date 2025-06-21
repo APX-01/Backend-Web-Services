@@ -3,6 +3,7 @@ package com.education.eduhive.groups.interfaces.rest;
 import com.education.eduhive.groups.domain.model.commands.DeleteGroupCommand;
 import com.education.eduhive.groups.domain.model.queries.GetAllGroupsQuery;
 import com.education.eduhive.groups.domain.model.queries.GetGroupByIdQuery;
+import com.education.eduhive.groups.domain.model.queries.GetGroupsByUserIdQuery;
 import com.education.eduhive.groups.domain.services.GroupCommandService;
 import com.education.eduhive.groups.domain.services.GroupQueryService;
 import com.education.eduhive.groups.interfaces.rest.resources.CreateGroupResource;
@@ -159,5 +160,30 @@ public class GroupsController {
         } else {
             return ResponseEntity.badRequest().build(); // 400 Bad Request
         }
+    }
+
+    @GetMapping("/user/{userId}")
+    @Operation(summary = "Get groups by user ID", description = "Retrieves all groups that a user belongs to")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Groups retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found or no groups found for user")
+    })
+    public ResponseEntity<List<GroupResource>> getGroupsByUserId(@PathVariable Long userId) {
+        // Create the query to get groups by user ID
+        var getGroupsByUserIdQuery = new GetGroupsByUserIdQuery(userId);
+
+        // Execute the query using the groupQueryService
+        var groups = groupQueryService.handle(getGroupsByUserIdQuery);
+
+        // Check if groups are found
+        if (groups.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // Convert the list of groups to a list of GroupResource
+        var groupResponse = groups.stream()
+                .map(GroupResourceFromEntityAssembler::toResourceFromEntity)
+                .toList();
+        return ResponseEntity.ok(groupResponse);
     }
 }

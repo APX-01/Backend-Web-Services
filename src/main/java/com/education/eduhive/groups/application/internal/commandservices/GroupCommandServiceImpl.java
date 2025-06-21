@@ -138,6 +138,8 @@ public class GroupCommandServiceImpl implements GroupCommandService {
 
     @Override
     public Optional<GroupJoinCode> handle(SetGroupJoinCodeForGroupCommand command) {
+
+        //Check if the group exists
         var group = groupRepository.findById(command.groupId());
 
         if (group.isEmpty())
@@ -145,6 +147,13 @@ public class GroupCommandServiceImpl implements GroupCommandService {
             throw new IllegalArgumentException("Group with id " + command.groupId() + " does not exist");
         }
 
+        // 1. Validar que la key no esté repetida en otros grupos
+        var existingGroupWithCode = groupRepository.findByJoinCode_Key(command.keycode());
+        if (existingGroupWithCode.isPresent() && !existingGroupWithCode.get().getId().equals(command.groupId())) {
+            throw new IllegalArgumentException("The key '" + command.keycode() + "' is already assigned to another group.");
+        }
+
+        // 2. Assign the join code to the group
         var groupToUpdate = group.get();
         var joinCodeToAdd = new GroupJoinCode(command.keycode(), command.expiration());
         groupToUpdate.setJoinCode(joinCodeToAdd);
