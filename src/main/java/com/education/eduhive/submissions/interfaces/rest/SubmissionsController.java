@@ -129,7 +129,7 @@ public class SubmissionsController {
         return ResponseEntity.ok(submissionResources);
     }
 
-    @GetMapping("/challenges/{challengeId}/submissions")
+    @GetMapping("/challenge/{challengeId}")
     @Operation(summary = "Get submissions by challengeId", description = "Retrieves submissions by challengeId.")
     @ApiResponses(value = {
             @ApiResponse (responseCode = "200", description = "Submissions retrieved successfully"),
@@ -149,7 +149,7 @@ public class SubmissionsController {
         return ResponseEntity.ok(submissionResources);
     }
 
-    @GetMapping("/students/{studentId}/submissions")
+    @GetMapping("/student/{studentId}")
     @Operation(summary = "Get submissions by studentId", description = "Retrieves submissions submitted by a specific student.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Submissions retrieved successfully"),
