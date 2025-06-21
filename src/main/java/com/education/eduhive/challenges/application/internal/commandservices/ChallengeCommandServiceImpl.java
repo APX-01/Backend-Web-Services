@@ -4,6 +4,7 @@ import com.education.eduhive.challenges.domain.model.aggregates.Challenge;
 import com.education.eduhive.challenges.domain.model.commands.CreateChallengeCommand;
 import com.education.eduhive.challenges.domain.model.commands.DeleteChallengeCommand;
 import com.education.eduhive.challenges.domain.model.commands.UpdateChallengeCommand;
+import com.education.eduhive.challenges.domain.model.valueobjects.GroupId;
 import com.education.eduhive.challenges.domain.model.valueobjects.Title;
 import com.education.eduhive.challenges.domain.services.ChallengeCommandService;
 import com.education.eduhive.challenges.infrastructure.persistence.jpa.repositories.ChallengeRepository;
@@ -34,8 +35,9 @@ public class ChallengeCommandServiceImpl implements ChallengeCommandService {
         }
 
 
-        if (challengeRepository.existsByTitle(new Title(createChallengeCommand.title()))){
-            throw new IllegalArgumentException("Title already exists");
+        // Validación de unicidad solo en ese grupo
+        if (challengeRepository.existsByTitleAndGroupId(new Title(createChallengeCommand.title()), new GroupId(createChallengeCommand.groupId()))) {
+            throw new IllegalArgumentException("A challenge with this title already exists in the group");
         }
 
         var challenge= new Challenge(createChallengeCommand);

@@ -12,4 +12,6 @@ public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
     boolean existsByTitle(Title title);
 
     List<Challenge> findByGroupId(GroupId groupId);
+
+    boolean existsByTitleAndGroupId(Title title, GroupId groupId);
 }
