@@ -48,4 +48,14 @@ public class UserQueryServiceImpl implements UserQueryService {
                 .filter(p -> p.getGroupId().equals(query.groupId()))
                 .findFirst(); // ✅ Solo el primero, como Optional
     }
+
+    @Override
+    public List<User> handle(GetUsersByGroupIdQuery getUsersByGroupIdQuery) {
+        return userRepository.findAll().stream()
+                .filter(user -> user.getProfilesInGroups().stream()
+                        .anyMatch(profile -> profile.getGroupId().equals(getUsersByGroupIdQuery.groupId())))
+                .toList();
+    }
+
+
 }

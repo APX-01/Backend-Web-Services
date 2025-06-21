@@ -243,4 +243,29 @@ public class UserController {
         }
     }
 
+    @GetMapping("/user/{groupId}")
+    @Operation(summary = "Get users by group ID")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "No users found for this group")
+    })
+    public ResponseEntity<List<UserResource>> getUsersByGroupId(@PathVariable Long groupId) {
+        // Create the query to get users by group ID
+        var getUsersByGroupIdQuery = new GetUsersByGroupIdQuery(groupId);
+
+        // Execute the query
+        var users = userQueryService.handle(getUsersByGroupIdQuery);
+
+        // Check if users were found
+        if (users.isEmpty()) return ResponseEntity.notFound().build();
+
+        // Convert the list of users to resources
+        var userResources = users.stream()
+                .map(UserResourceFromEntityAssembler::toResourceFromEntity)
+                .toList();
+
+        return ResponseEntity.ok(userResources);
+    }
+
+
 }

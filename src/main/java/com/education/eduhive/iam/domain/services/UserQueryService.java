@@ -17,4 +17,6 @@ public interface UserQueryService {
     Optional<User> handle(GetUserByEmailQuery getUserByEmailQuery);
 
     Optional<ProfileInGroup> handle(GetProfilesInGroupsByGroupIdAndStudentIdQuery getProfilesInGroupsByGroupIdAndStudentIdQuery);
+
+    List<User> handle(GetUsersByGroupIdQuery getUsersByGroupIdQuery);
 }
