@@ -62,4 +62,6 @@ public class GroupQueryServiceImpl implements GroupQueryService {
     public Optional<Group> handle(GetGroupByKeyQuery getGroupByKeyQuery) {
         return groupRepository.findByJoinCode_Key(getGroupByKeyQuery.key());
     }
+
+
 }

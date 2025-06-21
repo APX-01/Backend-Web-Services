@@ -173,7 +173,7 @@ public class GroupsController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/join/{userId}/{key}")
+    @GetMapping("/join/{userId}/{key}")
     @Operation(summary = "Join a group via join code")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Joined group successfully"),

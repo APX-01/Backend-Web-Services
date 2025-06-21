@@ -19,4 +19,6 @@ public interface GroupQueryService {
 
     Optional<Group> handle(GetGroupByKeyQuery getGroupByKeyQuery);
 
+
+
 }
