@@ -14,6 +14,9 @@ public record CreateUserCommand(
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("Email cannot be null or blank");
         }
+        if (!email.matches("^.+@.+$")) {
+            throw new IllegalArgumentException("Formato de email inválido");
+        }
         if (firstName == null || firstName.isBlank()) {
             throw new IllegalArgumentException("First name cannot be null or blank");
         }
