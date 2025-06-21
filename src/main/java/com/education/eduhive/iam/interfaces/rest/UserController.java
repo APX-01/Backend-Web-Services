@@ -217,7 +217,7 @@ public class UserController {
         return ResponseEntity.noContent().build(); // 204
     }
 
-    @GetMapping("/user/{userId}/profiles/{groupId}")
+    @GetMapping("/{userId}/profiles/{groupId}")
     @Operation(summary = "Get user profiles in a group", description = "Retrieves the profiles of a user in a specific group.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User profiles retrieved successfully"),
@@ -243,7 +243,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("/user/{groupId}")
+    @GetMapping("/{groupId}")
     @Operation(summary = "Get users by group ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
