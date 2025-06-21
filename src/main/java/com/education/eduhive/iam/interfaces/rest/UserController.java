@@ -4,6 +4,8 @@ import com.education.eduhive.iam.domain.model.commads.CreateUserCommand;
 import com.education.eduhive.iam.domain.model.commads.DeleteUserCommand;
 import com.education.eduhive.iam.domain.model.commads.UpdateUserCommand;
 import com.education.eduhive.iam.domain.model.queries.GetAllUsersQuery;
+import com.education.eduhive.iam.domain.model.queries.GetUserByEmailAndPasswordQuery;
+import com.education.eduhive.iam.domain.model.queries.GetUserByEmailQuery;
 import com.education.eduhive.iam.domain.model.queries.GetUserByIdQuery;
 import com.education.eduhive.iam.domain.services.UserCommandService;
 import com.education.eduhive.iam.domain.services.UserQueryService;
@@ -153,5 +155,49 @@ public class UserController {
                 .toList();
 
         return ResponseEntity.ok(userResources); // 200 OK
+    }
+
+    @GetMapping("/email/{email}/password/{password}")
+    @Operation(summary = "Get a user by email and password ", description = "Retrieves a student by email and password.")
+    @ApiResponses( value = {
+            @ApiResponse (responseCode = "200", description = "students retrieved successfully"),
+            @ApiResponse (responseCode = "404", description = "No students found")
+    })
+    public ResponseEntity<UserResource> getStudentByEmailAndPassword(@PathVariable String email, @PathVariable String password) {
+        // Crear el query para obtener el estudiante por email y password
+        GetUserByEmailAndPasswordQuery getUserByEmailAndPasswordQuery = new GetUserByEmailAndPasswordQuery(email, password);
+
+        // Ejecutar el query
+        var userOptional = userQueryService.handle(getUserByEmailAndPasswordQuery);
+
+        // Verificar si el estudiante fue encontrado
+        if (userOptional.isPresent()) {
+            var userResource = UserResourceFromEntityAssembler.toResourceFromEntity(userOptional.get());
+            return ResponseEntity.ok(userResource); // 200 OK
+        } else {
+            return ResponseEntity.notFound().build(); // 404 Not Found
+        }
+    }
+
+    @GetMapping("/email/{email}")
+    @Operation(summary = "Get a user by email", description = "Retrieves a user by email.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    public ResponseEntity<UserResource> getUserByEmail(@PathVariable String email) {
+        //Create the query to get the user by email
+        GetUserByEmailQuery getUserByEmailQuery =new GetUserByEmailQuery(email);
+
+        // Execute the query
+        var userOptional =userQueryService.handle(getUserByEmailQuery);
+
+        // Check if the user was found
+        if (userOptional.isPresent()) {
+            var userResource = UserResourceFromEntityAssembler.toResourceFromEntity(userOptional.get());
+            return ResponseEntity.ok(userResource); // 200 OK
+        } else {
+            return ResponseEntity.notFound().build(); // 404 Not Found
+        }
     }
 }
