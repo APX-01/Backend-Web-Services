@@ -129,7 +129,7 @@ public class ChallengesController{
         return ResponseEntity.ok(challengeResources); //200 es ok, devuelve la lista de challenges
     }
 
-    @GetMapping("/groups/{groupId}/challenges")
+    @GetMapping("/group/{groupId}")
     @Operation(summary = "Get challenges by group ID", description = "Retrieves a list of challenges associated with a specific group ID.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Challenges retrieved successfully"),
