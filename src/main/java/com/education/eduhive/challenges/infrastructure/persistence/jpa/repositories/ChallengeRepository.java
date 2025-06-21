@@ -6,6 +6,7 @@ import com.education.eduhive.challenges.domain.model.valueobjects.Title;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
 
@@ -14,4 +15,6 @@ public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
     List<Challenge> findByGroupId(GroupId groupId);
 
     boolean existsByTitleAndGroupId(Title title, GroupId groupId);
+
+    Optional<Challenge> findByTitleAndGroupId(Title title, GroupId groupId);
 }

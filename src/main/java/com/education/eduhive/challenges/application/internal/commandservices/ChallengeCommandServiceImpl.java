@@ -61,6 +61,16 @@ public class ChallengeCommandServiceImpl implements ChallengeCommandService {
             throw new IllegalArgumentException("Group not found: " + updateChallengeCommand.groupId());
         }
 
+        // Validar que no exista otro challenge en el mismo grupo con el mismo título
+        var title = new Title(updateChallengeCommand.title());
+        var groupId = new GroupId(updateChallengeCommand.groupId());
+        var existingChallengeWithSameTitle = challengeRepository.findByTitleAndGroupId(title, groupId);
+
+        if (existingChallengeWithSameTitle.isPresent() &&
+                !existingChallengeWithSameTitle.get().getId().equals(updateChallengeCommand.challengeId())) {
+            throw new IllegalArgumentException("A challenge with this title already exists in the group");
+        }
+
         var challengeToUpdate = challenge.get();
         try{
             var updatedChallenge= challengeRepository.save(challengeToUpdate
