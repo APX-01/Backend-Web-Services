@@ -17,4 +17,6 @@ public interface SubmissionQueryService {
     List<Submission> handle(GetSubmissionsByStudentIdQuery getSubmissionsByStudentIdQuery);
 
     List<Submission> handle(GetSubmissionsByStudentIdAndChallengeIdQuery getSubmissionsByStudentIdAndChallengeIdQuery);
+
+    List<Submission> handle(GetSubmissionsByStudentIdAndGroupIdQuery getSubmissionsByStudentIdAndGroupIdQuery);
 }

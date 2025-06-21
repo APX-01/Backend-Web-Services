@@ -201,6 +201,27 @@ public class SubmissionsController {
         return ResponseEntity.ok(submissionResources); // 200 OK
     }
 
+    @GetMapping("/student/{studentId}/group/{groupId}")
+    @Operation(summary = "Get submissions by studentId and groupId", description = "Retrieves submissions submitted by a specific student in a specific group.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Submissions retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "404", description = "No submissions found for the given student and group")
+    })
+    public ResponseEntity<List<Submission>> getSubmissionsByStudentIdAndGroupId(
+            @PathVariable Long studentId,
+            @PathVariable Long groupId) {
+
+        try {
+            GetSubmissionsByStudentIdAndGroupIdQuery getSubmissionsByStudentIdAndGroupIdQuery = new GetSubmissionsByStudentIdAndGroupIdQuery(studentId, groupId);
+            List<Submission> submissions = submissionQueryService.handle(getSubmissionsByStudentIdAndGroupIdQuery);
+            return ResponseEntity.ok(submissions);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
 
 
 }
