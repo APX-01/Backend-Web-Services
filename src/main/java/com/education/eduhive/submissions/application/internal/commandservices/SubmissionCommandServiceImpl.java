@@ -1,7 +1,7 @@
 package com.education.eduhive.submissions.application.internal.commandservices;
 
 import com.education.eduhive.challenges.infrastructure.persistence.jpa.repositories.ChallengeRepository;
-import com.education.eduhive.iam.domain.model.valueobjects.Role;
+import com.education.eduhive.iam.domain.model.valueobjects.Roles;
 import com.education.eduhive.iam.infrastructure.persistence.jpa.repositories.UserRepository;
 import com.education.eduhive.submissions.domain.model.aggregates.Submission;
 import com.education.eduhive.submissions.domain.model.commands.CreateSubmissionCommand;
@@ -42,7 +42,7 @@ public class SubmissionCommandServiceImpl implements SubmissionCommandService {
             throw new IllegalArgumentException("Student no encontrado");
         }
         var user = optionalUser.get();
-        if (user.getRole() != Role.ROLE_STUDENT) {
+        if (user.getRoles().stream().noneMatch(role -> role.getName().equals(Roles.ROLE_STUDENT))) {
             throw new IllegalStateException("Solo un usuario con rol STUDENT puede crear un submission");
         }
 
@@ -83,7 +83,7 @@ public class SubmissionCommandServiceImpl implements SubmissionCommandService {
         }
 
         var student = userOptional.get();
-        if (!student.getRole().equals(Role.ROLE_STUDENT)) {
+        if (!student.getRoles().equals(Roles.ROLE_STUDENT)) {
             throw new IllegalArgumentException("Only students can update submissions");
         }
 

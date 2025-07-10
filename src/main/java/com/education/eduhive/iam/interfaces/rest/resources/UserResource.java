@@ -1,6 +1,6 @@
 package com.education.eduhive.iam.interfaces.rest.resources;
 
-import com.education.eduhive.iam.domain.model.valueobjects.Role;
+import com.education.eduhive.iam.domain.model.valueobjects.Roles;
 
 import java.util.List;
 
@@ -9,6 +9,6 @@ public record UserResource(
         String email,
         String firstName,
         String lastName,
-        Role role,
+        List<Roles> roles,
         List<ProfileInGroupsResource> profilesInGroups
 ) { }

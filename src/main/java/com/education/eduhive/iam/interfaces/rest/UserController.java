@@ -38,27 +38,27 @@ public class UserController {
         this.userQueryService = userQueryService;
     }
 
-    @PostMapping
-    @Operation(summary = "Create a new user", description = "Creates a new user account.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "User created successfully"),
-            @ApiResponse (responseCode = "400", description = "Invalid input data")
-    })
-    public ResponseEntity<UserResource> createUser(@RequestBody CreateUserResource createUserResource) {
-        // Convertir el recurso al comando
-        CreateUserCommand createUserCommand = CreateUserCommandFromResourceAssembler.toCommandFromResource(createUserResource);
-
-        // Ejecutar el comando
-        var userOptional = userCommandService.handle(createUserCommand);
-
-        // Verificar si el estudiante fue creado exitosamente
-        if (userOptional.isPresent()) {
-            var userResource = UserResourceFromEntityAssembler.toResourceFromEntity(userOptional.get());
-            return ResponseEntity.status(201).body(userResource);
-        } else {
-            return ResponseEntity.badRequest().build();
-        }
-    }
+//    @PostMapping
+//    @Operation(summary = "Create a new user", description = "Creates a new user account.")
+//    @ApiResponses(value = {
+//            @ApiResponse(responseCode = "201", description = "User created successfully"),
+//            @ApiResponse (responseCode = "400", description = "Invalid input data")
+//    })
+//    public ResponseEntity<UserResource> createUser(@RequestBody CreateUserResource createUserResource) {
+//        // Convertir el recurso al comando
+//        CreateUserCommand createUserCommand = CreateUserCommandFromResourceAssembler.toCommandFromResource(createUserResource);
+//
+//        // Ejecutar el comando
+//        var userOptional = userCommandService.handle(createUserCommand);
+//
+//        // Verificar si el estudiante fue creado exitosamente
+//        if (userOptional.isPresent()) {
+//            var userResource = UserResourceFromEntityAssembler.toResourceFromEntity(userOptional.get());
+//            return ResponseEntity.status(201).body(userResource);
+//        } else {
+//            return ResponseEntity.badRequest().build();
+//        }
+//    }
 
     @PutMapping("/{userId}")
     @Operation(summary = "Update a user", description = "Update a user by its ID.")

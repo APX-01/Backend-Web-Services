@@ -5,7 +5,7 @@ import com.education.eduhive.groups.domain.model.commands.*;
 import com.education.eduhive.groups.domain.model.valueobjects.GroupJoinCode;
 import com.education.eduhive.groups.domain.services.GroupCommandService;
 import com.education.eduhive.groups.infrastructure.persistence.jpa.repositories.GroupRepository;
-import com.education.eduhive.iam.domain.model.valueobjects.Role;
+import com.education.eduhive.iam.domain.model.valueobjects.Roles;
 import com.education.eduhive.iam.infrastructure.persistence.jpa.repositories.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +34,7 @@ public class GroupCommandServiceImpl implements GroupCommandService {
         var teacher = teacherOptional.get();
 
         // ✅ Validar que tenga rol TEACHER
-        if (!teacher.getRole().equals(Role.ROLE_TEACHER)) {
+        if (!teacher.getRoles().equals(Roles.ROLE_TEACHER)) {
             throw new IllegalArgumentException("Only teachers can create groups");
         }
 
@@ -120,7 +120,7 @@ public class GroupCommandServiceImpl implements GroupCommandService {
         var user = userOptional.get();
 
         // Solo permitir que se unan los estudiantes
-        if (!user.getRole().equals(Role.ROLE_STUDENT)) {
+        if (!user.getRoles().equals(Roles.ROLE_STUDENT)) {
             throw new IllegalStateException("Only students can join groups via code");
         }
 
