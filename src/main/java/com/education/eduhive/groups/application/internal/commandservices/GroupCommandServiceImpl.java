@@ -45,6 +45,7 @@ public class GroupCommandServiceImpl implements GroupCommandService {
         var group = new Group(command);
         groupRepository.save(group);
 
+
         // ➕ Asignar grupo al teacher
         teacher.assignToGroup(group.getId());
         userRepository.save(teacher);
