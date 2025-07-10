@@ -24,17 +24,20 @@ public class GroupCommandServiceImpl implements GroupCommandService {
     }
 
     @Override
-    public Long handle(CreateGroupCommand command) {
+    public Long handle(CreateGroupCommand command, Long teacherId) {
         // 🔍 Buscar al usuario que creó el grupo
-        var teacherOptional = userRepository.findById(command.teacherId());
+        var teacherOptional = userRepository.findById(teacherId);
         if (teacherOptional.isEmpty()) {
-            throw new IllegalArgumentException("Teacher with ID " + command.teacherId() + " not found");
+            throw new IllegalArgumentException("Teacher with ID " + teacherId + " not found");
         }
 
         var teacher = teacherOptional.get();
 
+        var isTeacher = teacher.getRoles().stream()
+                .anyMatch(role -> role.getName() == Roles.ROLE_TEACHER);
+
         // ✅ Validar que tenga rol TEACHER
-        if (!teacher.getRoles().equals(Roles.ROLE_TEACHER)) {
+        if (!isTeacher) {
             throw new IllegalArgumentException("Only teachers can create groups");
         }
 

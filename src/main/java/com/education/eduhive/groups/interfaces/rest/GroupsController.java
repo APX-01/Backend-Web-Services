@@ -10,13 +10,17 @@ import com.education.eduhive.groups.domain.services.GroupCommandService;
 import com.education.eduhive.groups.domain.services.GroupQueryService;
 import com.education.eduhive.groups.interfaces.rest.resources.*;
 import com.education.eduhive.groups.interfaces.rest.transform.*;
+import com.education.eduhive.iam.infrastructure.authorization.sfs.model.UserDetailsImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 
@@ -32,6 +36,17 @@ public class GroupsController {
         this.groupQueryService = groupQueryService;
     }
 
+    private Long getTeacherIdFromContext() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        var principal = auth.getPrincipal();
+        if (principal instanceof UserDetailsImpl userDetails) {
+            System.out.println("🪪 Teacher ID: " + userDetails.getId());
+            return userDetails.getId();
+        }
+        throw new RuntimeException("Invalid principal type");
+    }
+
+    @PreAuthorize("hasRole('TEACHER')")
     @PostMapping
     @Operation(summary = "Create a Group", description = "Creates a group with the specified parameters")
     @ApiResponses(
@@ -41,60 +56,74 @@ public class GroupsController {
             }
     )
     public ResponseEntity<GroupResource> createGroup(@RequestBody CreateGroupResource resource) {
+        // 1️⃣ Convertir el recurso a comando
         var createCommand = CreateGroupCommandFromResourceAssembler.toCommandFromResource(resource);
-        var createdId = groupCommandService.handle(createCommand);
 
+        // 2️⃣ Obtener el ID del profesor autenticado
+        Long teacherId = getTeacherIdFromContext();
+
+        // 3️⃣ Ejecutar el servicio con el ID del teacher
+        var createdId = groupCommandService.handle(createCommand, teacherId);
+
+        // 4️⃣ Validar la creación
         if (createdId == null || createdId <= 0L) {
             return ResponseEntity.badRequest().build();
         }
 
+        // 5️⃣ Recuperar el grupo creado
         var getGroupByIdQuery = new GetGroupByIdQuery(createdId);
         var group = groupQueryService.handle(getGroupByIdQuery);
-        
-        if (group.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        
-        var groupEntity = group.get();
-        var groupResponse = GroupResourceFromEntityAssembler.toResourceFromEntity(groupEntity);
-        return new ResponseEntity<>(groupResponse, HttpStatus.CREATED);
-    }
-
-    @PostMapping("/teacher/{teacherId}")
-    @Operation(summary = "Create a Group by teacher", description = "Creates a group by a teacher")
-    @ApiResponses(
-            value = {
-                    @ApiResponse(responseCode = "201", description = "Group Created Successfully"),
-                    @ApiResponse(responseCode = "404", description = "Invalid input data")
-            }
-    )
-    public ResponseEntity<GroupResource> createGroupByTeacher(@RequestBody CreateGroupByTeacherResource createGroupByTeacherResource, @PathVariable Long teacherId) {
-        // Create the command from the resource
-        var createGroupCommand= CreateGroupByTeacherCommandFromResourceAssembler.toCommandFromResource(createGroupByTeacherResource, teacherId);
-
-        // Execute the command using the groupCommandService
-        var idOptional = groupCommandService.handle(createGroupCommand);
-
-        if (idOptional==null || idOptional <= 0L) {
-            return ResponseEntity.badRequest().build();
-        }
-
-        // Retrieve the created group
-        var getGroupByIdQuery = new GetGroupByIdQuery(idOptional);
-
-        var group = groupQueryService.handle(getGroupByIdQuery);
 
         if (group.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        // Convert the group entity to a resource
+        // 6️⃣ Devolver la respuesta
         var groupEntity = group.get();
         var groupResponse = GroupResourceFromEntityAssembler.toResourceFromEntity(groupEntity);
         return new ResponseEntity<>(groupResponse, HttpStatus.CREATED);
-
-
     }
+
+//    @PostMapping("/teacher")
+//    @Operation(summary = "Create a Group by teacher", description = "Creates a group by a teacher")
+//    @ApiResponses(
+//            value = {
+//                    @ApiResponse(responseCode = "201", description = "Group Created Successfully"),
+//                    @ApiResponse(responseCode = "404", description = "Invalid input data")
+//            }
+//    )
+//    public ResponseEntity<GroupResource> createGroupByTeacher(@RequestBody CreateGroupByTeacherResource createGroupByTeacherResource) {
+//
+//        //Obtain the teacher ID
+//        Long teacherId=getTeacherIdFromContext();
+//
+//        // Create the command from the resource
+//        var createGroupCommand = CreateGroupByTeacherCommandFromResourceAssembler
+//                .toCommandFromResource(createGroupByTeacherResource);
+//
+//        // Execute the command using the groupCommandService
+//        var groupId = groupCommandService.handle(createGroupCommand);
+//
+//        if (groupId == null || groupId <= 0L) {
+//            return ResponseEntity.badRequest().build();
+//        }
+//
+//        // Retrieve the created group
+//        var getGroupByIdQuery = new GetGroupByIdQuery(groupId);
+//
+//        var group = groupQueryService.handle(getGroupByIdQuery);
+//
+//        if (group.isEmpty()) {
+//            return ResponseEntity.notFound().build();
+//        }
+//
+//        // Convert the group entity to a resource
+//        var groupEntity = group.get();
+//        var groupResponse = GroupResourceFromEntityAssembler.toResourceFromEntity(groupEntity);
+//        return new ResponseEntity<>(groupResponse, HttpStatus.CREATED);
+//
+//
+//    }
 
     @GetMapping
     @Operation(summary = "Get all groups", description = "Gets all groups")

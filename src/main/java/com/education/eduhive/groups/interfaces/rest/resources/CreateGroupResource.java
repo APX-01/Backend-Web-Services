@@ -3,8 +3,8 @@ package com.education.eduhive.groups.interfaces.rest.resources;
 public record CreateGroupResource(
         String name,
         String description,
-        String imageUrl,
-        Long teacherId
+        String imageUrl
+        //Long teacherId
 ) {
     public CreateGroupResource {
         if (name == null || name.isEmpty()) {
