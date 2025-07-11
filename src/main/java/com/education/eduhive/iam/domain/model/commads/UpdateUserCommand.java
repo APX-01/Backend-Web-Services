@@ -1,7 +1,6 @@
 package com.education.eduhive.iam.domain.model.commads;
 
 public record UpdateUserCommand(
-        Long userId,
         String email,
         String firstName,
         String lastName,
@@ -10,9 +9,7 @@ public record UpdateUserCommand(
 
     public UpdateUserCommand {
 
-        if (userId == null || userId <= 0) {
-            throw new IllegalArgumentException("StudentId must be greater than 0");
-        }
+
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("Email cannot be null or blank");
         }

@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -59,6 +60,7 @@ public class GroupJoinCodesController {
         return ResponseEntity.ok(joinCode);
     }
 
+    @PreAuthorize("hasRole('TEACHER')")
     @PutMapping
     @Operation(summary = "Set group join code", description = "Set a group join code with for a specified group id")
     @ApiResponses(

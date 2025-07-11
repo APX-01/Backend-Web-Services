@@ -4,12 +4,11 @@ import com.education.eduhive.submissions.domain.model.commands.CreateSubmissionC
 import com.education.eduhive.submissions.interfaces.rest.resources.CreateSubmissionResource;
 
 public class CreateSubmissionCommandFromResourceAssembler {
-    public static CreateSubmissionCommand toCommandFromResource(CreateSubmissionResource createSubmissionResource) {
+    public static CreateSubmissionCommand toCommandFromResource(CreateSubmissionResource createSubmissionResource,Long studentId) {
         return new CreateSubmissionCommand(
                 createSubmissionResource.challengeId(),
-                createSubmissionResource.studentId(),
+                studentId,
                 createSubmissionResource.content(),
-                createSubmissionResource.score(),
                 createSubmissionResource.imageUrl()
         );
     }

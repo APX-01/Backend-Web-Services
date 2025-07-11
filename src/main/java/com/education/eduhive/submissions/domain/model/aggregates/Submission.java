@@ -49,7 +49,7 @@ public class Submission extends AuditableAbstractAggregateRoot<Submission> {
         this.challengeId = new ChallengeId(command.challengeId());
         this.studentId = new StudentId(command.studentId());
         this.content = new Content(command.content());
-        this.score = new Score(command.score());
+        this.score = new Score(0);
         this.imageUrl = command.imageUrl();
     }
 
@@ -64,6 +64,9 @@ public class Submission extends AuditableAbstractAggregateRoot<Submission> {
         return this;
     }
 
-
+    public Submission gradeSubmission(int newScore) {
+        this.score = new Score(newScore);
+        return this;
+    }
 
 }

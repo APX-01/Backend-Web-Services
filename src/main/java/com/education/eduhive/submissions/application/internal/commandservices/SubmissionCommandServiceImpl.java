@@ -6,6 +6,7 @@ import com.education.eduhive.iam.infrastructure.persistence.jpa.repositories.Use
 import com.education.eduhive.submissions.domain.model.aggregates.Submission;
 import com.education.eduhive.submissions.domain.model.commands.CreateSubmissionCommand;
 import com.education.eduhive.submissions.domain.model.commands.DeleteSubmissionCommand;
+import com.education.eduhive.submissions.domain.model.commands.GradeSubmissionCommand;
 import com.education.eduhive.submissions.domain.model.commands.UpdateSubmissionCommand;
 import com.education.eduhive.submissions.domain.services.SubmissionCommandService;
 import com.education.eduhive.submissions.infrastructure.persistence.jpa.respositories.SubmissionRepository;
@@ -46,7 +47,7 @@ public class SubmissionCommandServiceImpl implements SubmissionCommandService {
             throw new IllegalStateException("Solo un usuario con rol STUDENT puede crear un submission");
         }
 
-        // 3. Obtener el grupo al que pertenece el challenge
+        // 3. Verificar que el estudiante pertenece al grupo del challenge
         Long challengeGroupId = challenge.getGroupId().groupId(); // ⚠️ usa el value object GroupId
         boolean belongsToGroup = user.getProfilesInGroups().stream()
                 .anyMatch(profile -> profile.getGroupId().equals(challengeGroupId));
@@ -129,6 +130,27 @@ public class SubmissionCommandServiceImpl implements SubmissionCommandService {
             submissionRepository.deleteById(deleteSubmissionCommand.submissionId());
         }catch (Exception e) {
             throw new RuntimeException("Error deleting submission: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public Optional<Submission> handle(GradeSubmissionCommand command) {
+        var submissionOptional = submissionRepository.findById(command.submissionId());
+        if (submissionOptional.isEmpty()) {
+            throw new IllegalArgumentException("Submission not found");
+        }
+
+        var submission = submissionOptional.get();
+
+        // Aquí podrías validar reglas de negocio:
+        // Por ejemplo: verificar que quien califica sea teacher (ya lo hace @PreAuthorize)
+        submission.gradeSubmission(command.score());
+
+        try {
+            submissionRepository.save(submission);
+            return Optional.of(submission);
+        } catch (Exception e) {
+            throw new RuntimeException("Error grading submission: " + e.getMessage(), e);
         }
     }
 

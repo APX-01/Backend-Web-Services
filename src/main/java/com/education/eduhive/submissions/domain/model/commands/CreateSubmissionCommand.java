@@ -4,7 +4,6 @@ public record CreateSubmissionCommand(
     Long challengeId,
     Long studentId,
     String content,
-    int score,
     String imageUrl
 ) {
 
@@ -18,9 +17,9 @@ public record CreateSubmissionCommand(
         if (content == null || content.isBlank()) {
             throw new IllegalArgumentException("Content cannot be null or blank");
         }
-        if (score < 0 || score > 20) {
-            throw new IllegalArgumentException("Score must be between 0 and 20");
-        }
+//        if (score < 0 || score > 20) {
+//            throw new IllegalArgumentException("Score must be between 0 and 20");
+//        }
         if (imageUrl == null || imageUrl.isBlank()) {
             throw new IllegalArgumentException("Image URL cannot be null or blank");
         }

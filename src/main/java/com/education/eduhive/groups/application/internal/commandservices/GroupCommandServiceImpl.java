@@ -124,7 +124,7 @@ public class GroupCommandServiceImpl implements GroupCommandService {
         var user = userOptional.get();
 
         // Solo permitir que se unan los estudiantes
-        if (!user.getRoles().equals(Roles.ROLE_STUDENT)) {
+        if (user.getRoles().stream().noneMatch(role -> role.getName().equals(Roles.ROLE_STUDENT))) {
             throw new IllegalStateException("Only students can join groups via code");
         }
 

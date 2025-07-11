@@ -47,21 +47,39 @@ public class UserCommandServiceImpl implements UserCommandService {
 //    }
 
     @Override
-    public Optional<User> handle(UpdateUserCommand updateUserCommand) {
-        var userOptional = userRepository.findById(updateUserCommand.userId());
+    public Optional<User> handle(UpdateUserCommand updateUserCommand, Long userId) {
+        var userOptional = userRepository.findById(userId);
         if (userOptional.isEmpty()) {
-            throw new IllegalArgumentException("User with ID " + updateUserCommand.userId() + " not found");
+            throw new IllegalArgumentException("User with ID " + userId + " not found");
         }
 
         //Check if a user with the same email already exists
         var existingUserWithEmail = userRepository.findByEmail(updateUserCommand.email());
-        if (existingUserWithEmail.isPresent() && !existingUserWithEmail.get().getId().equals(updateUserCommand.userId())) {
+        if (existingUserWithEmail.isPresent() && !existingUserWithEmail.get().getId().equals(userId)) {
             throw new IllegalArgumentException("User with email " + updateUserCommand.email() + " already exists");
         }
 
         var userToUpdate = userOptional.get();
+
+        // ✅ Aquí cifras la contraseña SOLO si no viene vacía
+        String encodedPassword = updateUserCommand.password();
+        if (encodedPassword != null && !encodedPassword.isBlank()) {
+            encodedPassword = hashingService.encode(encodedPassword);
+        } else {
+            // Si viene vacía, mantén la actual
+            encodedPassword = userToUpdate.getPassword();
+        }
+
+        // ✅ Crea un nuevo comando con la contraseña cifrada
+        var commandWithEncodedPassword = new UpdateUserCommand(
+                updateUserCommand.email(),
+                updateUserCommand.firstName(),
+                updateUserCommand.lastName(),
+                encodedPassword
+        );
+
         try{
-            var updatedUser= userRepository.save(userToUpdate.updateStudentDetails(updateUserCommand));
+            var updatedUser= userRepository.save(userToUpdate.updateStudentDetails(commandWithEncodedPassword));
             return Optional.of(updatedUser);
         }catch (Exception e) {
             // Handle exception, e.g., log it or rethrow as a custom exception

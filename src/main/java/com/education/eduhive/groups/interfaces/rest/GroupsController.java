@@ -36,11 +36,11 @@ public class GroupsController {
         this.groupQueryService = groupQueryService;
     }
 
-    private Long getTeacherIdFromContext() {
+    private Long getAuthenticatedUserId() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
         var principal = auth.getPrincipal();
         if (principal instanceof UserDetailsImpl userDetails) {
-            System.out.println("🪪 Teacher ID: " + userDetails.getId());
+            System.out.println("🪪 Authenticated User ID: " + userDetails.getId());
             return userDetails.getId();
         }
         throw new RuntimeException("Invalid principal type");
@@ -60,7 +60,7 @@ public class GroupsController {
         var createCommand = CreateGroupCommandFromResourceAssembler.toCommandFromResource(resource);
 
         // 2️⃣ Obtener el ID del profesor autenticado
-        Long teacherId = getTeacherIdFromContext();
+        Long teacherId = getAuthenticatedUserId();
 
         // 3️⃣ Ejecutar el servicio con el ID del teacher
         var createdId = groupCommandService.handle(createCommand, teacherId);
@@ -202,16 +202,19 @@ public class GroupsController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/join/{userId}/{key}")
+    @PreAuthorize("hasRole('STUDENT')")
+    @GetMapping("/join/{key}")
     @Operation(summary = "Join a group via join code")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Joined group successfully"),
             @ApiResponse(responseCode = "404", description = "Group not found")
     })
     public ResponseEntity<GroupResource> joinGroup(
-            @PathVariable Long userId,
             @PathVariable String key
     ) {
+
+        Long userId = getAuthenticatedUserId();
+
         var command = new JoinGroupByCodeCommand(userId, key);
         var groupOptional = groupCommandService.handle(command);
 

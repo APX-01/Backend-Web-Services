@@ -10,7 +10,7 @@ public interface UserCommandService {
 
 //    Optional<User> handle(CreateUserCommand createUserCommand);
 
-    Optional<User> handle(UpdateUserCommand updateUserCommand);
+    Optional<User> handle(UpdateUserCommand updateUserCommand, Long userId);
 
     void handle(DeleteUserCommand deleteUserCommand);
 
