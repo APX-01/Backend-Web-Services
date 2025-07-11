@@ -238,7 +238,7 @@ public class GroupsController {
 
         // Check if groups are found
         if (groups.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.ok(List.of());
         }
 
         // Convert the list of groups to a list of GroupResource
