@@ -66,6 +66,19 @@ public class User extends AuditableAbstractAggregateRoot<User> {
         addRoles(roles);
     }
 
+    public User(String email, String firstName, String lastName, String password, List<Role> roleEnums) {
+        super();
+        this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.password = password;
+
+        this.roles = new HashSet<>();
+        addRoles(roleEnums);
+
+        this.profilesInGroups = new ArrayList<>();
+    }
+
 
     //update
     public User updateStudentDetails(UpdateUserCommand updateUserCommand){

@@ -147,7 +147,7 @@ public class UserCommandServiceImpl implements UserCommandService {
                 role->roleRepository.findByName(role)
                         .orElseThrow(() -> new IllegalArgumentException("Role " + role + " not found"))
                 ).toList();
-        var user = new User(signUpCommand.email(), hashingService.encode(signUpCommand.password()), roles);
+        var user = new User(signUpCommand.email(),signUpCommand.firstName(),signUpCommand.lastName(), hashingService.encode(signUpCommand.password()), roles);
         userRepository.save(user);
         return userRepository.findByEmail(signUpCommand.email());
     }
