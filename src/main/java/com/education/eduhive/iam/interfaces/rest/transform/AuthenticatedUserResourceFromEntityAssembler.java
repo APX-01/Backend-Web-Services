@@ -8,7 +8,10 @@ public class AuthenticatedUserResourceFromEntityAssembler {
         return new AuthenticatedUserResource(
                 user.getId(),
                 user.getEmail(),
-                token
+                token,
+                user.getRoles().stream().map(
+                        role -> role.getName().name()
+                ).toList()
         );
     }
 }
