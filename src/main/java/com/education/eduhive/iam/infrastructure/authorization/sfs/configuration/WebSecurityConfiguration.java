@@ -24,9 +24,7 @@ import java.util.List;
 /**
  * Web Security Configuration.
  * <p>
- * This class is responsible for configuring the web security.
- * It enables the method security and configures the security filter chain.
- * It includes the authentication manager, the authentication provider, the password encoder and the authentication entry point.
+ * Configures web security, authentication, and CORS for the application.
  * </p>
  */
 @Configuration
@@ -34,38 +32,20 @@ import java.util.List;
 public class WebSecurityConfiguration {
 
     private final UserDetailsService userDetailsService;
-
     private final BearerTokenService tokenService;
-
     private final BCryptHashingService hashingService;
-
     private final AuthenticationEntryPoint unauthorizedRequestHandler;
 
-    /**
-     * This method creates the Bearer Authorization Request Filter.
-     * @return The Bearer Authorization Request Filter
-     * @see BearerAuthorizationRequestFilter
-     */
     @Bean
     public BearerAuthorizationRequestFilter authorizationRequestFilter() {
         return new BearerAuthorizationRequestFilter(tokenService, userDetailsService);
     }
 
-    /**
-     * This method creates the authentication manager.
-     * @param authenticationConfiguration The {@link AuthenticationConfiguration} object with the authentication configuration
-     * @return The {@link AuthenticationManager} instance from the authentication configuration
-     *
-     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
-    /**
-     * This method creates the authentication provider.
-     * @return The {@link DaoAuthenticationProvider} authentication provider with the user details service and the password encoder
-     */
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         var authenticationProvider = new DaoAuthenticationProvider();
@@ -74,58 +54,56 @@ public class WebSecurityConfiguration {
         return authenticationProvider;
     }
 
-    /**
-     * This method creates the password encoder.
-     * @return The {@link PasswordEncoder} instance with the hashing service
-     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return hashingService;
     }
 
     /**
-     * This method creates the security filter chain.
-     * It also configures the http security.
-     *
-     * @param http The {@link HttpSecurity} object to configure with the security filter chain
-     * @return The {@link SecurityFilterChain} instance with the application http security configuration
+     * Configures the security filter chain, including CORS, CSRF, session management, and authentication.
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.cors(configurer -> configurer.configurationSource(_ -> {
+        http.cors(configurer -> configurer.configurationSource(request -> {
             var cors = new CorsConfiguration();
+            // ✅ Usa tu dominio de frontend Vercel real
             cors.setAllowedOrigins(List.of("https://frontend-web-applications-deploymen.vercel.app"));
+            // ✅ Asegúrate de incluir OPTIONS para preflight
             cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
             cors.setAllowedHeaders(List.of("*"));
-            cors.setAllowCredentials(true); // <- CLAVE para cookies o Authorization header
+            cors.setAllowCredentials(true); // ✅ OBLIGATORIO para enviar cookies o headers Authorization
             return cors;
         }));
+
         http.csrf(csrfConfigurer -> csrfConfigurer.disable())
                 .exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(unauthorizedRequestHandler))
-                .sessionManagement( customizer -> customizer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(authorizeRequests -> authorizeRequests
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/v1/authentication/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/swagger-resources/**",
-                                "/webjars/**").permitAll()
-                        .anyRequest().authenticated());
+                                "/webjars/**"
+                        ).permitAll()
+                        .anyRequest().authenticated()
+                );
+
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(authorizationRequestFilter(), UsernamePasswordAuthenticationFilter.class);
-        return http.build();
 
+        return http.build();
     }
 
     /**
-     * This is the constructor of the class.
-     * @param userDetailsService The user details service
-     * @param tokenService The token service
-     * @param hashingService The hashing service
-     * @param authenticationEntryPoint The authentication entry point
+     * Constructor with required dependencies.
      */
-    public WebSecurityConfiguration(@Qualifier("defaultUserDetailsService") UserDetailsService userDetailsService, BearerTokenService tokenService, BCryptHashingService hashingService, AuthenticationEntryPoint authenticationEntryPoint) {
+    public WebSecurityConfiguration(
+            @Qualifier("defaultUserDetailsService") UserDetailsService userDetailsService,
+            BearerTokenService tokenService,
+            BCryptHashingService hashingService,
+            AuthenticationEntryPoint authenticationEntryPoint) {
         this.userDetailsService = userDetailsService;
         this.tokenService = tokenService;
         this.hashingService = hashingService;
