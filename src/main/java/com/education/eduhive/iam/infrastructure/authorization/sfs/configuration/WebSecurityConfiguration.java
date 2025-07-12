@@ -18,15 +18,10 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
-/**
- * Web Security Configuration.
- * <p>
- * Configures web security, authentication, and CORS for the application.
- * </p>
- */
 @Configuration
 @EnableMethodSecurity
 public class WebSecurityConfiguration {
@@ -35,6 +30,17 @@ public class WebSecurityConfiguration {
     private final BearerTokenService tokenService;
     private final BCryptHashingService hashingService;
     private final AuthenticationEntryPoint unauthorizedRequestHandler;
+
+    public WebSecurityConfiguration(
+            @Qualifier("defaultUserDetailsService") UserDetailsService userDetailsService,
+            BearerTokenService tokenService,
+            BCryptHashingService hashingService,
+            AuthenticationEntryPoint authenticationEntryPoint) {
+        this.userDetailsService = userDetailsService;
+        this.tokenService = tokenService;
+        this.hashingService = hashingService;
+        this.unauthorizedRequestHandler = authenticationEntryPoint;
+    }
 
     @Bean
     public BearerAuthorizationRequestFilter authorizationRequestFilter() {
@@ -48,10 +54,10 @@ public class WebSecurityConfiguration {
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
-        var authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setUserDetailsService(userDetailsService);
-        authenticationProvider.setPasswordEncoder(hashingService);
-        return authenticationProvider;
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(hashingService);
+        return provider;
     }
 
     @Bean
@@ -59,25 +65,14 @@ public class WebSecurityConfiguration {
         return hashingService;
     }
 
-    /**
-     * Configures the security filter chain, including CORS, CSRF, session management, and authentication.
-     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.cors(configurer -> configurer.configurationSource(request -> {
-            var cors = new CorsConfiguration();
-            // ✅ Usa tu dominio de frontend Vercel real
-            cors.setAllowedOrigins(List.of("https://frontend-web-applications-deploymen.vercel.app"));
-            // ✅ Asegúrate de incluir OPTIONS para preflight
-            cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-            cors.setAllowedHeaders(List.of("*"));
-            cors.setAllowCredentials(true); // ✅ OBLIGATORIO para enviar cookies o headers Authorization
-            return cors;
-        }));
+        // ✅ CORS correcto con allowCredentials y sin wildcard *
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
-        http.csrf(csrfConfigurer -> csrfConfigurer.disable())
-                .exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(unauthorizedRequestHandler))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        http.csrf(csrf -> csrf.disable())
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedRequestHandler))
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/v1/authentication/**",
@@ -96,17 +91,16 @@ public class WebSecurityConfiguration {
         return http.build();
     }
 
-    /**
-     * Constructor with required dependencies.
-     */
-    public WebSecurityConfiguration(
-            @Qualifier("defaultUserDetailsService") UserDetailsService userDetailsService,
-            BearerTokenService tokenService,
-            BCryptHashingService hashingService,
-            AuthenticationEntryPoint authenticationEntryPoint) {
-        this.userDetailsService = userDetailsService;
-        this.tokenService = tokenService;
-        this.hashingService = hashingService;
-        this.unauthorizedRequestHandler = authenticationEntryPoint;
+    // ✅ Usa una bean CORS reutilizable
+    private UrlBasedCorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("https://frontend-web-applications-deploymen.vercel.app")); // NO wildcard si allowCredentials!
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Preflight!
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true); // Esto activa la restricción de no usar "*"
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 }
