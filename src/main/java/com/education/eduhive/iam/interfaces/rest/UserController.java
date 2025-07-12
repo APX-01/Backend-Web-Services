@@ -284,5 +284,26 @@ public class UserController {
         return ResponseEntity.ok(userResources);
     }
 
+    @GetMapping("/{userId}/fullname")
+    @Operation(summary = "Get user's full name", description = "Retrieves user's by their full name.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User's full name retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    public ResponseEntity<String> getUserFullName(@PathVariable Long userId) {
+        // Create the query to get the user by full name
+        GetFullNameByIdQuery getFullNameByIdQuery = new GetFullNameByIdQuery(userId);
+
+        // Execute the query
+        var userFullName = userQueryService.handle(getFullNameByIdQuery);
+
+        // Verificar si se encontró el nombre completo
+        if (userFullName.isPresent()) {
+            return ResponseEntity.ok(userFullName.get()); // 200 OK
+        } else {
+            return ResponseEntity.notFound().build(); // 404 Not Found
+        }
+    }
+
 
 }
