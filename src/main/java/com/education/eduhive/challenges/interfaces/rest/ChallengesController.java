@@ -36,6 +36,7 @@ public class ChallengesController{
     private final ChallengeCommandService challengeCommandService;
     private final ChallengeQueryService challengeQueryService;
 
+
     public ChallengesController(ChallengeCommandService challengeCommandService, ChallengeQueryService challengeQueryService) {
         this.challengeCommandService = challengeCommandService;
         this.challengeQueryService = challengeQueryService;
@@ -61,15 +62,16 @@ public class ChallengesController{
         @ApiResponse(responseCode = "404", description = "Challenge not found")
     })
     public ResponseEntity<ChallengeResource> createChallenge(@RequestBody CreateChallengeResource challengeResource){
-        Long userId = getAuthenticatedUserId();
+
+        Long authenticatedUserId = getAuthenticatedUserId();
 
         var createdChallenge= CreateChallengeCommandFromResourceAssembler.toCommandFromResource(challengeResource);
-        var challengeId=challengeCommandService.handle(createdChallenge, userId);
+        var challengeId=challengeCommandService.handle(createdChallenge, authenticatedUserId);
         if (challengeId==null|| challengeId==0L){
             return ResponseEntity.badRequest().build(); //da una respuestra 400 y vacia
         }
         var getChallengeByIdQuery= new GetChallengeByIdQuery(challengeId);
-        var challenge= challengeQueryService.handle(getChallengeByIdQuery);
+        var challenge= challengeQueryService.handle(getChallengeByIdQuery,authenticatedUserId);
 
         if (challenge.isEmpty()){
            return ResponseEntity.notFound().build(); // da una respuesta 404 y vacia
@@ -118,9 +120,11 @@ public class ChallengesController{
         @ApiResponse(responseCode = "200", description = "Challenge retrieved successfully"),
         @ApiResponse(responseCode = "404", description = "Challenge not found")
     })
-    public ResponseEntity<ChallengeResource> getChallenge(@PathVariable Long challengeId){
+    public ResponseEntity<ChallengeResource> getChallengeById(@PathVariable Long challengeId){
+        Long authenticatedUserId = getAuthenticatedUserId();
+
         var getChallengeByIdQuery = new GetChallengeByIdQuery(challengeId);
-        var challenge = challengeQueryService.handle(getChallengeByIdQuery);
+        var challenge = challengeQueryService.handle(getChallengeByIdQuery,authenticatedUserId);
         if (challenge.isEmpty()){
             return ResponseEntity.notFound().build(); // da una respuesta 404 y vacia
         }
@@ -154,8 +158,10 @@ public class ChallengesController{
         @ApiResponse(responseCode = "404", description = "No challenges found for the group")
     })
     public ResponseEntity<List<ChallengeResource>> getChallengesByGroupId(@PathVariable Long groupId){
+
+        Long authenticatedUserId = getAuthenticatedUserId();
         var getChallengesByGroupIdQuery=new GetChallengesByGroupIdQuery(groupId);
-        var challenges=challengeQueryService.handle(getChallengesByGroupIdQuery);
+        var challenges=challengeQueryService.handle(getChallengesByGroupIdQuery,authenticatedUserId);
         if (challenges.isEmpty()){
             return ResponseEntity.notFound().build(); // da una respuesta 404 y vacia
         }

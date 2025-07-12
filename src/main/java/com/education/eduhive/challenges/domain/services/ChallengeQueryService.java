@@ -10,9 +10,9 @@ import java.util.Optional;
 
 public interface ChallengeQueryService {
 
-    Optional<Challenge> handle(GetChallengeByIdQuery getChallengeByIdQuery);
+    Optional<Challenge> handle(GetChallengeByIdQuery getChallengeByIdQuery, Long userId);
 
     List<Challenge> handle(GetAllChallengesQuery getAllChallengesQuery);
 
-    List<Challenge> handle(GetChallengesByGroupIdQuery getChallengesByGroupIdQuery);
+    List<Challenge> handle(GetChallengesByGroupIdQuery getChallengesByGroupIdQuery, Long userId);
 }
