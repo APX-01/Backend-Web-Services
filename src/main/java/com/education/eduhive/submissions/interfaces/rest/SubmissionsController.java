@@ -246,6 +246,28 @@ public class SubmissionsController {
         }
     }
 
+    @GetMapping("/group/{groupId}")
+    @Operation(summary = "Get submissions by groupId", description = "Retrieves submissions submitted in a specific group.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Submissions retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "404", description = "No submissions found for the given student and group")
+    })
+    public ResponseEntity<List<SubmissionResource>> getSubmissionsByGroupId(@PathVariable Long groupId) {
+        try {
+            GetSubmissionsByGroupIdQuery query = new GetSubmissionsByGroupIdQuery(groupId);
+            var submissions = submissionQueryService.handle(query);
+            var resources = submissions.stream()
+                    .map(SubmissionResourceFromEntityAssembler::toResourceFromEntity)
+                    .toList();
+            return ResponseEntity.ok(resources);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
     @PreAuthorize("hasRole('TEACHER')")
     @PutMapping("/{submissionId}/grade")
     @Operation(summary = "Grade a submission", description = "Updates the score of a submission.")

@@ -98,4 +98,18 @@ public class SubmissionQueryServiceImpl implements SubmissionQueryService {
                 })
                 .toList();
     }
+
+    @Override
+    public List<Submission> handle(GetSubmissionsByGroupIdQuery query) {
+        List<Submission> allSubmissions = submissionRepository.findAll();
+
+        return allSubmissions.stream()
+                .filter(submission -> {
+                    Long challengeId = submission.getChallengeId().challengeId();
+                    return challengeRepository.findById(challengeId)
+                            .map(challenge -> challenge.getGroupId().groupId().equals(query.groupId()))
+                            .orElse(false);
+                })
+                .toList();
+    }
 }
