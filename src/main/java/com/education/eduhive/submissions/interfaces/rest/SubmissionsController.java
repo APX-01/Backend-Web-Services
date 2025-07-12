@@ -59,15 +59,15 @@ public class SubmissionsController {
     })
     public ResponseEntity<SubmissionResource> createSubmission(@RequestBody CreateSubmissionResource submissionResource){
 
-        Long studentId = getAuthenticatedUserId();
+        Long authenticatedUserId = getAuthenticatedUserId();
 
-        var createdSubmission= CreateSubmissionCommandFromResourceAssembler.toCommandFromResource(submissionResource, studentId);
+        var createdSubmission= CreateSubmissionCommandFromResourceAssembler.toCommandFromResource(submissionResource, authenticatedUserId);
         var submissionId = submissionCommandService.handle(createdSubmission);
         if(submissionId ==null|| submissionId ==0L) {
             return ResponseEntity.badRequest().build();//da una respuestra 400 y vacia
         }
         var getSubmissionByIdQuery = new GetSubmissionByIdQuery(submissionId);
-        var submission= submissionQueryService.handle(getSubmissionByIdQuery);
+        var submission= submissionQueryService.handle(getSubmissionByIdQuery,authenticatedUserId);
 
         if(submission.isEmpty()) {
             return ResponseEntity.notFound().build(); //404 Not Found
@@ -117,8 +117,9 @@ public class SubmissionsController {
             @ApiResponse (responseCode = "404", description = "Submission not found")
     })
     public ResponseEntity<SubmissionResource> getSubmissionById(@PathVariable Long submissionId){
+        Long authenticatedUserId = getAuthenticatedUserId();
         var getSubmissionByIdQuery= new GetSubmissionByIdQuery(submissionId);
-        var submission = submissionQueryService.handle(getSubmissionByIdQuery);
+        var submission = submissionQueryService.handle(getSubmissionByIdQuery,authenticatedUserId);
         if (submission.isEmpty()) {
             return ResponseEntity.notFound().build(); //404 Not Found
         }

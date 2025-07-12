@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface SubmissionQueryService {
 
-    Optional<Submission> handle(GetSubmissionByIdQuery getSubmissionByIdQuery);
+    Optional<Submission> handle(GetSubmissionByIdQuery getSubmissionByIdQuery, Long userId);
 
     List<Submission> handle(GetAllSubmissionsQuery getAllSubmissionsQuery);
 
