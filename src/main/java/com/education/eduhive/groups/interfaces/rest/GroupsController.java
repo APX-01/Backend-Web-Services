@@ -72,7 +72,7 @@ public class GroupsController {
 
         // 5️⃣ Recuperar el grupo creado
         var getGroupByIdQuery = new GetGroupByIdQuery(createdId);
-        var group = groupQueryService.handle(getGroupByIdQuery);
+        var group = groupQueryService.handle(getGroupByIdQuery,teacherId);
 
         if (group.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -154,8 +154,9 @@ public class GroupsController {
             }
     )
     public ResponseEntity<GroupResource> getGroupById(@PathVariable("id") Long id) {
+        Long userId = getAuthenticatedUserId();
         var getGroupByIdQuery = new GetGroupByIdQuery(id);
-        var group = groupQueryService.handle(getGroupByIdQuery);
+        var group = groupQueryService.handle(getGroupByIdQuery,userId);
         if (group.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -173,13 +174,16 @@ public class GroupsController {
             }
     )
     public ResponseEntity<GroupResource> updateGroup(@RequestBody UpdateGroupResource resource, @PathVariable("id") Long id) {
+
+        Long userId = getAuthenticatedUserId();
+
         var updateCommand = UpdateGroupCommandFromResourceAssembler.toCommandFromResource(resource, id);
         var updatedGroup = groupCommandService.handle(updateCommand);
         if (updatedGroup.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
         var getGroupByIdQuery = new GetGroupByIdQuery(id);
-        var group = groupQueryService.handle(getGroupByIdQuery);
+        var group = groupQueryService.handle(getGroupByIdQuery,userId);
         if (group.isEmpty()) {
             return ResponseEntity.notFound().build();
         }

@@ -10,6 +10,7 @@ import com.education.eduhive.groups.domain.services.GroupCommandService;
 import com.education.eduhive.groups.domain.services.GroupQueryService;
 import com.education.eduhive.groups.interfaces.rest.resources.*;
 import com.education.eduhive.groups.interfaces.rest.transform.*;
+import com.education.eduhive.iam.infrastructure.authorization.sfs.model.UserDetailsImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -17,6 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,9 +31,20 @@ public class GroupJoinCodesController {
     private final GroupCommandService groupCommandService;
     private final GroupQueryService groupQueryService;
 
+
     public GroupJoinCodesController(GroupCommandService groupCommandService, GroupQueryService groupQueryService ) {
         this.groupCommandService = groupCommandService;
         this.groupQueryService = groupQueryService;
+    }
+
+    private Long getAuthenticatedUserId() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        var principal = auth.getPrincipal();
+        if (principal instanceof UserDetailsImpl userDetails) {
+            System.out.println("🪪 Authenticated User ID: " + userDetails.getId());
+            return userDetails.getId();
+        }
+        throw new RuntimeException("Invalid principal type");
     }
 
     @GetMapping
@@ -44,8 +57,10 @@ public class GroupJoinCodesController {
     )
     public ResponseEntity<GroupJoinCode> getGroupJoinCodeByGroupId(@PathVariable Long groupId)
     {
+        Long userId = getAuthenticatedUserId();
+
         var getGroupByIdQuery = new GetGroupByIdQuery(groupId);
-        var group = this.groupQueryService.handle(getGroupByIdQuery);
+        var group = this.groupQueryService.handle(getGroupByIdQuery,userId);
 
         if (group.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -70,8 +85,9 @@ public class GroupJoinCodesController {
             }
     )
     public ResponseEntity<GroupJoinCodeResource> setGroupJoinCodeByGroupId(@PathVariable Long groupId, @RequestBody SetGroupJoinCodeResource resource) {
+        Long userId = getAuthenticatedUserId();
         var getGroupByIdQuery = new GetGroupByIdQuery(groupId);
-        var group = this.groupQueryService.handle(getGroupByIdQuery);
+        var group = this.groupQueryService.handle(getGroupByIdQuery,userId);
 
         if (group.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -105,8 +121,9 @@ public class GroupJoinCodesController {
             }
     )
     public ResponseEntity<Void> resetGroupJoinCodeByGroupId(@PathVariable Long groupId) {
+        Long userId = getAuthenticatedUserId();
         var getGroupByIdQuery = new GetGroupByIdQuery(groupId);
-        var group = this.groupQueryService.handle(getGroupByIdQuery);
+        var group = this.groupQueryService.handle(getGroupByIdQuery,userId);
 
         if (group.isEmpty()) {
             return ResponseEntity.notFound().build();
