@@ -94,9 +94,10 @@ public class WebSecurityConfiguration {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.cors(configurer -> configurer.configurationSource(_ -> {
             var cors = new CorsConfiguration();
-            cors.setAllowedOrigins(List.of("*"));
-            cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+            cors.setAllowedOrigins(List.of("https://frontend-web-applications-deploymen.vercel.app"));
+            cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
             cors.setAllowedHeaders(List.of("*"));
+            cors.setAllowCredentials(true); // <- CLAVE para cookies o Authorization header
             return cors;
         }));
         http.csrf(csrfConfigurer -> csrfConfigurer.disable())
