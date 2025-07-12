@@ -8,6 +8,7 @@ import com.education.eduhive.submissions.domain.model.commands.CreateSubmissionC
 import com.education.eduhive.submissions.domain.model.commands.DeleteSubmissionCommand;
 import com.education.eduhive.submissions.domain.model.commands.GradeSubmissionCommand;
 import com.education.eduhive.submissions.domain.model.commands.UpdateSubmissionCommand;
+import com.education.eduhive.submissions.domain.model.valueobjects.States;
 import com.education.eduhive.submissions.domain.services.SubmissionCommandService;
 import com.education.eduhive.submissions.infrastructure.persistence.jpa.respositories.SubmissionRepository;
 import org.springframework.stereotype.Service;
@@ -145,6 +146,7 @@ public class SubmissionCommandServiceImpl implements SubmissionCommandService {
         // Aquí podrías validar reglas de negocio:
         // Por ejemplo: verificar que quien califica sea teacher (ya lo hace @PreAuthorize)
         submission.gradeSubmission(command.score());
+        submission.changeState(States.GRADED);
 
         try {
             submissionRepository.save(submission);

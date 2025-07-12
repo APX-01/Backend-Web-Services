@@ -6,6 +6,7 @@ public record SubmissionResource(
         Long studentId,
         String content,
         int score,
-        String imageUrl) {
-
+        String imageUrl,
+        String status
+) {
 }

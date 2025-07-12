@@ -3,7 +3,6 @@ package com.education.eduhive.submissions.interfaces.rest.resources;
 public record CreateSubmissionResource(
         Long challengeId,
         String content,
-
         String imageUrl) {
 
     public CreateSubmissionResource{
