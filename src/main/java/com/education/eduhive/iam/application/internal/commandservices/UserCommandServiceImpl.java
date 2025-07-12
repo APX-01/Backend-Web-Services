@@ -109,8 +109,16 @@ public class UserCommandServiceImpl implements UserCommandService {
             throw new IllegalArgumentException("User with ID " + leaveGroupCommand.userId() + " not found");
         }
 
-        // Check if the group ID is valid
+
         var user = userOptional.get();
+
+        // ✅ Validar que pertenece al grupo
+        boolean belongsToGroup = user.getProfilesInGroups().stream()
+                .anyMatch(profile -> profile.getGroupId().equals(leaveGroupCommand.groupId()));
+
+        if (!belongsToGroup) {
+            throw new IllegalArgumentException("User does not belong to the group with ID " + leaveGroupCommand.groupId());
+        }
         user.removeFromGroup(leaveGroupCommand.groupId());
 
         // Save the updated user
@@ -120,7 +128,6 @@ public class UserCommandServiceImpl implements UserCommandService {
         } catch (Exception e) {
             throw new RuntimeException("Error while removing user from group", e);
         }
-
 
     }
 

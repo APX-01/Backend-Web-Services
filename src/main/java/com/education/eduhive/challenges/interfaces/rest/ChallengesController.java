@@ -138,7 +138,7 @@ public class ChallengesController{
     public ResponseEntity<List<ChallengeResource>> getAllChallenges(){
         var challenges= challengeQueryService.handle(new GetAllChallengesQuery());
         if (challenges.isEmpty()){
-            return ResponseEntity.notFound().build(); // da una respuesta 404 y vacia
+            return ResponseEntity.ok(List.of()); // da una respuesta 404 y vacia
         }
         var challengeResources=challenges.stream()
                 .map(ChallengeResourceFromEntityAssembler::toResourceFromEntity)

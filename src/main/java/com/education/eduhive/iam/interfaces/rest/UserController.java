@@ -216,13 +216,15 @@ public class UserController {
         }
     }
 
-    @DeleteMapping("/leave/{userId}/{groupId}")
+    @DeleteMapping("/leave/{groupId}")
     @Operation(summary = "Leave a group", description = "Allows a user to leave a group by providing the group ID and user ID.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "User left the group successfully"),
             @ApiResponse(responseCode = "404", description = "Group or user not found")
     })
-    public ResponseEntity<Void> leaveGroup(@PathVariable Long groupId, @PathVariable Long userId) {
+    public ResponseEntity<Void> leaveGroup(@PathVariable Long groupId) {
+        // Get the authenticated user ID from the security context
+        Long userId = getUserIdFromContext();
         // Create the command to leave the group
         LeaveGroupCommand leaveGroupCommand = new LeaveGroupCommand(userId, groupId);
 
