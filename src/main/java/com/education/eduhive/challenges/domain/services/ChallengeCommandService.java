@@ -9,9 +9,9 @@ import java.util.Optional;
 
 public interface ChallengeCommandService {
 
-    Long handle(CreateChallengeCommand createChallengeCommand);
+    Long handle(CreateChallengeCommand createChallengeCommand, Long userid);
 
-    Optional<Challenge> handle(UpdateChallengeCommand updateChallengeCommand);
+    Optional<Challenge> handle(UpdateChallengeCommand updateChallengeCommand, Long userid);
 
     void handle(DeleteChallengeCommand deleteChallengeCommand);
 }

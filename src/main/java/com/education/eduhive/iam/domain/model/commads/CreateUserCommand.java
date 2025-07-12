@@ -1,13 +1,16 @@
 package com.education.eduhive.iam.domain.model.commads;
 
-import com.education.eduhive.iam.domain.model.valueobjects.Role;
+import com.education.eduhive.iam.domain.model.entities.Role;
+import com.education.eduhive.iam.domain.model.valueobjects.Roles;
+
+import java.util.Set;
 
 public record CreateUserCommand(
         String email,
         String firstName,
         String lastName,
         String password,
-        Role role
+        Set<Role> roles
 ) {
 
     public CreateUserCommand {
@@ -26,8 +29,8 @@ public record CreateUserCommand(
         if (password == null || password.isBlank()) {
             throw new IllegalArgumentException("Password cannot be null or blank");
         }
-        if (role == null ) {
-            throw new IllegalArgumentException("Role cannot be null");
+        if (roles == null || roles.isEmpty()) {
+            throw new IllegalArgumentException("Roles cannot be null or empty");
         }
     }
 

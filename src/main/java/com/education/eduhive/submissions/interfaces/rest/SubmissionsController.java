@@ -1,14 +1,17 @@
 package com.education.eduhive.submissions.interfaces.rest;
 
+import com.education.eduhive.iam.infrastructure.authorization.sfs.model.UserDetailsImpl;
 import com.education.eduhive.submissions.domain.model.aggregates.Submission;
 import com.education.eduhive.submissions.domain.model.commands.DeleteSubmissionCommand;
 import com.education.eduhive.submissions.domain.model.queries.*;
 import com.education.eduhive.submissions.domain.services.SubmissionCommandService;
 import com.education.eduhive.submissions.domain.services.SubmissionQueryService;
 import com.education.eduhive.submissions.interfaces.rest.resources.CreateSubmissionResource;
+import com.education.eduhive.submissions.interfaces.rest.resources.GradeSubmissionResource;
 import com.education.eduhive.submissions.interfaces.rest.resources.SubmissionResource;
 import com.education.eduhive.submissions.interfaces.rest.resources.UpdateSubmissionResource;
 import com.education.eduhive.submissions.interfaces.rest.transform.CreateSubmissionCommandFromResourceAssembler;
+import com.education.eduhive.submissions.interfaces.rest.transform.GradeSubmissionCommandFromResourceAssembler;
 import com.education.eduhive.submissions.interfaces.rest.transform.SubmissionResourceFromEntityAssembler;
 import com.education.eduhive.submissions.interfaces.rest.transform.UpdateSubmissionCommandFromResourceAssembler;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,6 +20,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,6 +40,17 @@ public class SubmissionsController {
         this.submissionQueryService = submissionQueryService;
     }
 
+    private Long getAuthenticatedUserId() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        var principal = auth.getPrincipal();
+        if (principal instanceof UserDetailsImpl userDetails) {
+            System.out.println("🪪 Authenticated User ID: " + userDetails.getId());
+            return userDetails.getId();
+        }
+        throw new RuntimeException("Invalid principal type");
+    }
+
+    @PreAuthorize("hasRole('STUDENT')")
     @PostMapping
     @Operation(summary = "Create a new submission", description = "Creates a new submission for a challenge by a student.")
     @ApiResponses(value = {
@@ -43,13 +59,15 @@ public class SubmissionsController {
     })
     public ResponseEntity<SubmissionResource> createSubmission(@RequestBody CreateSubmissionResource submissionResource){
 
-        var createdSubmission= CreateSubmissionCommandFromResourceAssembler.toCommandFromResource(submissionResource);
+        Long authenticatedUserId = getAuthenticatedUserId();
+
+        var createdSubmission= CreateSubmissionCommandFromResourceAssembler.toCommandFromResource(submissionResource, authenticatedUserId);
         var submissionId = submissionCommandService.handle(createdSubmission);
         if(submissionId ==null|| submissionId ==0L) {
             return ResponseEntity.badRequest().build();//da una respuestra 400 y vacia
         }
         var getSubmissionByIdQuery = new GetSubmissionByIdQuery(submissionId);
-        var submission= submissionQueryService.handle(getSubmissionByIdQuery);
+        var submission= submissionQueryService.handle(getSubmissionByIdQuery,authenticatedUserId);
 
         if(submission.isEmpty()) {
             return ResponseEntity.notFound().build(); //404 Not Found
@@ -59,6 +77,7 @@ public class SubmissionsController {
         return new ResponseEntity<>(submissionResponse, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasRole('TEACHER')")
     @PutMapping("/{submissionId}")
     @Operation(summary = "Update a submission", description = "Update a submission's score by its ID.")
     @ApiResponses(value = {
@@ -98,8 +117,9 @@ public class SubmissionsController {
             @ApiResponse (responseCode = "404", description = "Submission not found")
     })
     public ResponseEntity<SubmissionResource> getSubmissionById(@PathVariable Long submissionId){
+        Long authenticatedUserId = getAuthenticatedUserId();
         var getSubmissionByIdQuery= new GetSubmissionByIdQuery(submissionId);
-        var submission = submissionQueryService.handle(getSubmissionByIdQuery);
+        var submission = submissionQueryService.handle(getSubmissionByIdQuery,authenticatedUserId);
         if (submission.isEmpty()) {
             return ResponseEntity.notFound().build(); //404 Not Found
         }
@@ -225,6 +245,52 @@ public class SubmissionsController {
             return ResponseEntity.internalServerError().body(null);
         }
     }
+
+    @GetMapping("/group/{groupId}")
+    @Operation(summary = "Get submissions by groupId", description = "Retrieves submissions submitted in a specific group.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Submissions retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "404", description = "No submissions found for the given student and group")
+    })
+    public ResponseEntity<List<SubmissionResource>> getSubmissionsByGroupId(@PathVariable Long groupId) {
+        try {
+            GetSubmissionsByGroupIdQuery query = new GetSubmissionsByGroupIdQuery(groupId);
+            var submissions = submissionQueryService.handle(query);
+            var resources = submissions.stream()
+                    .map(SubmissionResourceFromEntityAssembler::toResourceFromEntity)
+                    .toList();
+            return ResponseEntity.ok(resources);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
+    @PreAuthorize("hasRole('TEACHER')")
+    @PutMapping("/{submissionId}/grade")
+    @Operation(summary = "Grade a submission", description = "Updates the score of a submission.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Submission graded successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data")
+    })
+    public ResponseEntity<SubmissionResource> gradeSubmission(
+            @PathVariable Long submissionId,
+            @RequestBody GradeSubmissionResource gradeSubmissionResource) {
+
+        var command = GradeSubmissionCommandFromResourceAssembler.toCommandFromResource(submissionId, gradeSubmissionResource);
+        var gradedSubmission = submissionCommandService.handle(command);
+
+        if (gradedSubmission.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        var resource = SubmissionResourceFromEntityAssembler.toResourceFromEntity(gradedSubmission.get());
+        return ResponseEntity.ok(resource);
+    }
+
+
 
 
 }

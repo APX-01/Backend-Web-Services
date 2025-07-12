@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface GroupCommandService {
 
-    Long handle(CreateGroupCommand command);
+    Long handle(CreateGroupCommand command, Long teacherId);
 
     Optional<Group> handle(UpdateGroupCommand command);
 
@@ -21,6 +21,6 @@ public interface GroupCommandService {
 
     void handle(ResetGroupJoinCodeForGroupCommand command);
 
-
+    void handle(KickStudentFromGroupCommand command, Long teacherId);
 
 }

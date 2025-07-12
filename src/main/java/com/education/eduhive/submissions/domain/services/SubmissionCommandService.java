@@ -3,6 +3,7 @@ package com.education.eduhive.submissions.domain.services;
 import com.education.eduhive.submissions.domain.model.aggregates.Submission;
 import com.education.eduhive.submissions.domain.model.commands.CreateSubmissionCommand;
 import com.education.eduhive.submissions.domain.model.commands.DeleteSubmissionCommand;
+import com.education.eduhive.submissions.domain.model.commands.GradeSubmissionCommand;
 import com.education.eduhive.submissions.domain.model.commands.UpdateSubmissionCommand;
 
 import java.util.Optional;
@@ -20,4 +21,6 @@ public interface SubmissionCommandService {
 
     void handle(DeleteSubmissionCommand deleteSubmissionCommand);
     //¿Por qué retorna void? Porque no se necesita retornar nada.
+
+    Optional<Submission> handle(GradeSubmissionCommand command);
 }

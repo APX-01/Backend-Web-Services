@@ -11,7 +11,7 @@ public interface GroupQueryService {
 
     List<Group> handle(GetAllGroupsQuery query);
 
-    Optional<Group> handle(GetGroupByIdQuery query);
+    Optional<Group> handle(GetGroupByIdQuery query, Long userId);
 
     Optional<GroupJoinCode> handle(GetGroupJoinCodeByGroupId query);
 

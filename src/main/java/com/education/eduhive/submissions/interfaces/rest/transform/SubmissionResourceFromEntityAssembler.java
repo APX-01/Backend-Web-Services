@@ -11,7 +11,8 @@ public class SubmissionResourceFromEntityAssembler {
                 submissionEntity.getStudentId().studentId(),
                 submissionEntity.getContent().content(),
                 submissionEntity.getScore().score(),
-                submissionEntity.getImageUrl()
+                submissionEntity.getImageUrl(),
+                submissionEntity.getState().name()
         );
     }
 }

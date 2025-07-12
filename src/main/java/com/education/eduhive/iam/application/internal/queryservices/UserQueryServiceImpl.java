@@ -57,5 +57,10 @@ public class UserQueryServiceImpl implements UserQueryService {
                 .toList();
     }
 
+    @Override
+    public Optional<String> handle(GetFullNameByIdQuery getFullNameByIdQuery) {
+        return userRepository.findById(getFullNameByIdQuery.userId())
+                .map(user -> user.getFirstName() + " " + user.getLastName());
+    }
 
 }

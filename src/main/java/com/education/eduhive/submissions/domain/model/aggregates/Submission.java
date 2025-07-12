@@ -2,14 +2,15 @@ package com.education.eduhive.submissions.domain.model.aggregates;
 
 import com.education.eduhive.shared.domain.model.aggregates.AuditableAbstractAggregateRoot;
 import com.education.eduhive.submissions.domain.model.commands.CreateSubmissionCommand;
-import com.education.eduhive.submissions.domain.model.valueobjects.ChallengeId;
-import com.education.eduhive.submissions.domain.model.valueobjects.Content;
-import com.education.eduhive.submissions.domain.model.valueobjects.Score;
-import com.education.eduhive.submissions.domain.model.valueobjects.StudentId;
+import com.education.eduhive.submissions.domain.model.valueobjects.*;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.Getter;
+import lombok.Setter;
 
+@Setter
 @Getter
 @Entity
 public class Submission extends AuditableAbstractAggregateRoot<Submission> {
@@ -31,6 +32,9 @@ public class Submission extends AuditableAbstractAggregateRoot<Submission> {
 
     private String imageUrl;
 
+    @Enumerated(EnumType.STRING)
+    private States state;
+
     protected Submission() {
         super();
     }
@@ -49,8 +53,9 @@ public class Submission extends AuditableAbstractAggregateRoot<Submission> {
         this.challengeId = new ChallengeId(command.challengeId());
         this.studentId = new StudentId(command.studentId());
         this.content = new Content(command.content());
-        this.score = new Score(command.score());
+        this.score = new Score(0);
         this.imageUrl = command.imageUrl();
+        this.state = States.NOT_GRADED; // Estado inicial
     }
 
     //Metodos que permiten actualizar el contenido y la puntuación de la submission
@@ -64,6 +69,15 @@ public class Submission extends AuditableAbstractAggregateRoot<Submission> {
         return this;
     }
 
+    public Submission gradeSubmission(int newScore) {
+        this.score = new Score(newScore);
+        return this;
+    }
+
+    public Submission changeState(States newState) {
+        this.state = newState;
+        return this;
+    }
 
 
 }

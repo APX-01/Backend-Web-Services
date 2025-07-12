@@ -29,8 +29,26 @@ public class GroupQueryServiceImpl implements GroupQueryService {
     }
 
     @Override
-    public Optional<Group> handle(GetGroupByIdQuery query) {
-        return groupRepository.findById(query.id());
+    public Optional<Group> handle(GetGroupByIdQuery query, Long userId) {
+        Optional<Group> groupOpt = groupRepository.findById(query.id());
+        if (groupOpt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        var userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            throw new IllegalArgumentException("User with ID " + userId + " not found");
+        }
+
+        boolean belongsToGroup = userOpt.get().getProfilesInGroups().stream()
+                .anyMatch(profile -> profile.getGroupId().equals(query.id()));
+
+        if (!belongsToGroup) {
+            // El usuario no pertenece al grupo
+            return Optional.empty();
+        }
+
+        return groupOpt;
     }
 
     @Override

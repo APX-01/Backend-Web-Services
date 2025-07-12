@@ -7,6 +7,7 @@ import com.education.eduhive.iam.domain.model.commads.UpdateUserCommand;
 import com.education.eduhive.iam.domain.model.queries.*;
 import com.education.eduhive.iam.domain.services.UserCommandService;
 import com.education.eduhive.iam.domain.services.UserQueryService;
+import com.education.eduhive.iam.infrastructure.authorization.sfs.model.UserDetailsImpl;
 import com.education.eduhive.iam.interfaces.rest.resources.CreateUserResource;
 import com.education.eduhive.iam.interfaces.rest.resources.ProfileInGroupsResource;
 import com.education.eduhive.iam.interfaces.rest.resources.UserResource;
@@ -20,6 +21,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,46 +35,59 @@ public class UserController {
     private final UserCommandService userCommandService;
     private final UserQueryService userQueryService;
 
+
     public UserController(UserCommandService userCommandService, UserQueryService userQueryService) {
         this.userCommandService = userCommandService;
         this.userQueryService = userQueryService;
     }
 
-    @PostMapping
-    @Operation(summary = "Create a new user", description = "Creates a new user account.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "User created successfully"),
-            @ApiResponse (responseCode = "400", description = "Invalid input data")
-    })
-    public ResponseEntity<UserResource> createUser(@RequestBody CreateUserResource createUserResource) {
-        // Convertir el recurso al comando
-        CreateUserCommand createUserCommand = CreateUserCommandFromResourceAssembler.toCommandFromResource(createUserResource);
-
-        // Ejecutar el comando
-        var userOptional = userCommandService.handle(createUserCommand);
-
-        // Verificar si el estudiante fue creado exitosamente
-        if (userOptional.isPresent()) {
-            var userResource = UserResourceFromEntityAssembler.toResourceFromEntity(userOptional.get());
-            return ResponseEntity.status(201).body(userResource);
-        } else {
-            return ResponseEntity.badRequest().build();
+    private Long getUserIdFromContext() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        var principal = auth.getPrincipal();
+        if (principal instanceof UserDetailsImpl userDetails) {
+            System.out.println("🪪 User ID from context: " + userDetails.getId());
+            return userDetails.getId();
         }
+        throw new RuntimeException("Invalid principal type");
     }
 
-    @PutMapping("/{userId}")
+//    @PostMapping
+//    @Operation(summary = "Create a new user", description = "Creates a new user account.")
+//    @ApiResponses(value = {
+//            @ApiResponse(responseCode = "201", description = "User created successfully"),
+//            @ApiResponse (responseCode = "400", description = "Invalid input data")
+//    })
+//    public ResponseEntity<UserResource> createUser(@RequestBody CreateUserResource createUserResource) {
+//        // Convertir el recurso al comando
+//        CreateUserCommand createUserCommand = CreateUserCommandFromResourceAssembler.toCommandFromResource(createUserResource);
+//
+//        // Ejecutar el comando
+//        var userOptional = userCommandService.handle(createUserCommand);
+//
+//        // Verificar si el estudiante fue creado exitosamente
+//        if (userOptional.isPresent()) {
+//            var userResource = UserResourceFromEntityAssembler.toResourceFromEntity(userOptional.get());
+//            return ResponseEntity.status(201).body(userResource);
+//        } else {
+//            return ResponseEntity.badRequest().build();
+//        }
+//    }
+
+    @PutMapping
     @Operation(summary = "Update a user", description = "Update a user by its ID.")
     @ApiResponses(value = {
             @ApiResponse (responseCode = "200", description = "user updated successfully"),
             @ApiResponse (responseCode = "400", description = "Invalid input data")
     })
-    public ResponseEntity<UserResource> updateUser(@PathVariable Long userId, @RequestBody UpdateUserResource updateUserResource){
+    public ResponseEntity<UserResource> updateUser(@RequestBody UpdateUserResource updateUserResource){
+
+        Long userId = getUserIdFromContext();
 
         //Convertir el recurso a comando
-        UpdateUserCommand updateUserCommand = UpdateUserCommandFromResourceAssembler.toCommandFromResource(userId, updateUserResource);
+        UpdateUserCommand updateUserCommand = UpdateUserCommandFromResourceAssembler.toCommandFromResource(updateUserResource);
 
         // Ejecutar el comando
-        var userOptional = userCommandService.handle(updateUserCommand);
+        var userOptional = userCommandService.handle(updateUserCommand,userId);
 
         // Verificar si el estudiante fue actualizado exitosamente
         if (userOptional.isPresent()) {
@@ -157,27 +172,27 @@ public class UserController {
         return ResponseEntity.ok(userResources); // 200 OK
     }
 
-    @GetMapping("/email/{email}/password/{password}")
-    @Operation(summary = "Get a user by email and password ", description = "Retrieves a student by email and password.")
-    @ApiResponses( value = {
-            @ApiResponse (responseCode = "200", description = "students retrieved successfully"),
-            @ApiResponse (responseCode = "404", description = "No students found")
-    })
-    public ResponseEntity<UserResource> getStudentByEmailAndPassword(@PathVariable String email, @PathVariable String password) {
-        // Crear el query para obtener el estudiante por email y password
-        GetUserByEmailAndPasswordQuery getUserByEmailAndPasswordQuery = new GetUserByEmailAndPasswordQuery(email, password);
-
-        // Ejecutar el query
-        var userOptional = userQueryService.handle(getUserByEmailAndPasswordQuery);
-
-        // Verificar si el estudiante fue encontrado
-        if (userOptional.isPresent()) {
-            var userResource = UserResourceFromEntityAssembler.toResourceFromEntity(userOptional.get());
-            return ResponseEntity.ok(userResource); // 200 OK
-        } else {
-            return ResponseEntity.notFound().build(); // 404 Not Found
-        }
-    }
+//    @GetMapping("/email/{email}/password/{password}")
+//    @Operation(summary = "Get a user by email and password ", description = "Retrieves a student by email and password.")
+//    @ApiResponses( value = {
+//            @ApiResponse (responseCode = "200", description = "students retrieved successfully"),
+//            @ApiResponse (responseCode = "404", description = "No students found")
+//    })
+//    public ResponseEntity<UserResource> getStudentByEmailAndPassword(@PathVariable String email, @PathVariable String password) {
+//        // Crear el query para obtener el estudiante por email y password
+//        GetUserByEmailAndPasswordQuery getUserByEmailAndPasswordQuery = new GetUserByEmailAndPasswordQuery(email, password);
+//
+//        // Ejecutar el query
+//        var userOptional = userQueryService.handle(getUserByEmailAndPasswordQuery);
+//
+//        // Verificar si el estudiante fue encontrado
+//        if (userOptional.isPresent()) {
+//            var userResource = UserResourceFromEntityAssembler.toResourceFromEntity(userOptional.get());
+//            return ResponseEntity.ok(userResource); // 200 OK
+//        } else {
+//            return ResponseEntity.notFound().build(); // 404 Not Found
+//        }
+//    }
 
     @GetMapping("/email/{email}")
     @Operation(summary = "Get a user by email", description = "Retrieves a user by email.")
@@ -201,13 +216,15 @@ public class UserController {
         }
     }
 
-    @DeleteMapping("/leave/{userId}/{groupId}")
+    @DeleteMapping("/leave/{groupId}")
     @Operation(summary = "Leave a group", description = "Allows a user to leave a group by providing the group ID and user ID.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "User left the group successfully"),
             @ApiResponse(responseCode = "404", description = "Group or user not found")
     })
-    public ResponseEntity<Void> leaveGroup(@PathVariable Long groupId, @PathVariable Long userId) {
+    public ResponseEntity<Void> leaveGroup(@PathVariable Long groupId) {
+        // Get the authenticated user ID from the security context
+        Long userId = getUserIdFromContext();
         // Create the command to leave the group
         LeaveGroupCommand leaveGroupCommand = new LeaveGroupCommand(userId, groupId);
 
@@ -265,6 +282,27 @@ public class UserController {
                 .toList();
 
         return ResponseEntity.ok(userResources);
+    }
+
+    @GetMapping("/{userId}/fullname")
+    @Operation(summary = "Get user's full name", description = "Retrieves user's by their full name.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User's full name retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    public ResponseEntity<String> getUserFullName(@PathVariable Long userId) {
+        // Create the query to get the user by full name
+        GetFullNameByIdQuery getFullNameByIdQuery = new GetFullNameByIdQuery(userId);
+
+        // Execute the query
+        var userFullName = userQueryService.handle(getFullNameByIdQuery);
+
+        // Verificar si se encontró el nombre completo
+        if (userFullName.isPresent()) {
+            return ResponseEntity.ok(userFullName.get()); // 200 OK
+        } else {
+            return ResponseEntity.notFound().build(); // 404 Not Found
+        }
     }
 
 

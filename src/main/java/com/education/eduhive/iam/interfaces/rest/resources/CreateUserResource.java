@@ -1,13 +1,16 @@
 package com.education.eduhive.iam.interfaces.rest.resources;
 
-import com.education.eduhive.iam.domain.model.valueobjects.Role;
+import com.education.eduhive.iam.domain.model.entities.Role;
+import com.education.eduhive.iam.domain.model.valueobjects.Roles;
+
+import java.util.Set;
 
 public record CreateUserResource(
         String email,
         String firstName,
         String lastName,
         String password,
-        Role role
+        Set<Role> roles
 ) {
     public CreateUserResource {
         if (email == null || email.isBlank()) {
@@ -22,8 +25,8 @@ public record CreateUserResource(
         if (password == null || password.isBlank()) {
             throw new IllegalArgumentException("Password cannot be null or blank");
         }
-        if (role == null) {
-            throw new IllegalArgumentException("Role cannot be null");
+        if (roles == null || roles.isEmpty()) {
+            throw new IllegalArgumentException("Roles cannot be null or empty");
         }
     }
 }

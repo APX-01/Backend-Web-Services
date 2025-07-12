@@ -4,7 +4,6 @@ import java.util.Date;
 
 public record UpdateChallengeCommand(
         Long challengeId,
-
         String title,
         String description,
         Long groupId,

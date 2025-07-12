@@ -10,6 +10,6 @@ public class CreateUserCommandFromResourceAssembler {
                 createUserResource.firstName(),
                 createUserResource.lastName(),
                 createUserResource.password(),
-                createUserResource.role());
+                createUserResource.roles());
     }
 }

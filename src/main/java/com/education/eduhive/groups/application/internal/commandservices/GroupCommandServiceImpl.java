@@ -5,7 +5,7 @@ import com.education.eduhive.groups.domain.model.commands.*;
 import com.education.eduhive.groups.domain.model.valueobjects.GroupJoinCode;
 import com.education.eduhive.groups.domain.services.GroupCommandService;
 import com.education.eduhive.groups.infrastructure.persistence.jpa.repositories.GroupRepository;
-import com.education.eduhive.iam.domain.model.valueobjects.Role;
+import com.education.eduhive.iam.domain.model.valueobjects.Roles;
 import com.education.eduhive.iam.infrastructure.persistence.jpa.repositories.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -24,23 +24,27 @@ public class GroupCommandServiceImpl implements GroupCommandService {
     }
 
     @Override
-    public Long handle(CreateGroupCommand command) {
+    public Long handle(CreateGroupCommand command, Long teacherId) {
         // 🔍 Buscar al usuario que creó el grupo
-        var teacherOptional = userRepository.findById(command.teacherId());
+        var teacherOptional = userRepository.findById(teacherId);
         if (teacherOptional.isEmpty()) {
-            throw new IllegalArgumentException("Teacher with ID " + command.teacherId() + " not found");
+            throw new IllegalArgumentException("Teacher with ID " + teacherId + " not found");
         }
 
         var teacher = teacherOptional.get();
 
+        var isTeacher = teacher.getRoles().stream()
+                .anyMatch(role -> role.getName() == Roles.ROLE_TEACHER);
+
         // ✅ Validar que tenga rol TEACHER
-        if (!teacher.getRole().equals(Role.ROLE_TEACHER)) {
+        if (!isTeacher) {
             throw new IllegalArgumentException("Only teachers can create groups");
         }
 
         // ✅ Crear y guardar el grupo
         var group = new Group(command);
         groupRepository.save(group);
+
 
         // ➕ Asignar grupo al teacher
         teacher.assignToGroup(group.getId());
@@ -120,7 +124,7 @@ public class GroupCommandServiceImpl implements GroupCommandService {
         var user = userOptional.get();
 
         // Solo permitir que se unan los estudiantes
-        if (!user.getRole().equals(Role.ROLE_STUDENT)) {
+        if (user.getRoles().stream().noneMatch(role -> role.getName().equals(Roles.ROLE_STUDENT))) {
             throw new IllegalStateException("Only students can join groups via code");
         }
 
@@ -182,6 +186,60 @@ public class GroupCommandServiceImpl implements GroupCommandService {
             throw new RuntimeException("Error while removing join code", e);
         }
     }
+
+    @Override
+    public void handle(KickStudentFromGroupCommand command, Long teacherId) {
+
+        // 1. Validar que el grupo exista
+        var groupOptional = groupRepository.findById(command.groupId());
+        if (groupOptional.isEmpty()) {
+            throw new IllegalArgumentException("Group with ID " + command.groupId() + " does not exist");
+        }
+        var group = groupOptional.get();
+
+        // 2. Validar que el usuario a expulsar exista
+        var studentOptional = userRepository.findById(command.studentId());
+        if (studentOptional.isEmpty()) {
+            throw new IllegalArgumentException("User with ID " + command.studentId() + " does not exist");
+        }
+        var student = studentOptional.get();
+
+        // 3. Validar que el usuario es estudiante
+        if (student.getRoles().stream().noneMatch(role -> role.getName().equals(Roles.ROLE_STUDENT))) {
+            throw new IllegalArgumentException("User with ID " + command.studentId() + " is not a student");
+        }
+
+        // 4. Validar que el profesor logueado esté relacionado como OWNER del grupo
+        var teacherOptional = userRepository.findById(teacherId);
+        if (teacherOptional.isEmpty()) {
+            throw new IllegalArgumentException("Teacher with ID " + teacherId + " does not exist");
+        }
+        var teacher = teacherOptional.get();
+
+        boolean isTeacherOwnerOfGroup = teacher.getProfilesInGroups().stream()
+            .anyMatch(profile -> profile.getGroupId().equals(group.getId()))
+            && teacher.getRoles().stream().anyMatch(role -> role.getName().equals(Roles.ROLE_TEACHER));
+
+        if (!isTeacherOwnerOfGroup) {
+            throw new IllegalArgumentException("You are not the owner of this group");
+        }
+
+        // 5. Validar que el estudiante esté en el grupo
+        boolean studentInGroup = student.getProfilesInGroups().stream()
+                .anyMatch(profile -> profile.getGroupId().equals(group.getId()));
+
+        if (!studentInGroup) {
+            throw new IllegalArgumentException("The student is not a member of this group");
+        }
+
+        // 6. Eliminar relación usando método del usuario
+        student.removeFromGroup(group.getId());
+
+        // 7. Guardar cambios en repositorio
+        userRepository.save(student);
+    }
+
+
 
 
 }

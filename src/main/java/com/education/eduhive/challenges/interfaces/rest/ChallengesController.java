@@ -14,12 +14,15 @@ import com.education.eduhive.challenges.interfaces.rest.resource.UpdateChallenge
 import com.education.eduhive.challenges.interfaces.rest.transform.ChallengeResourceFromEntityAssembler;
 import com.education.eduhive.challenges.interfaces.rest.transform.CreateChallengeCommandFromResourceAssembler;
 import com.education.eduhive.challenges.interfaces.rest.transform.UpdateChallengeCommandFromResourceAssembler;
+import com.education.eduhive.iam.infrastructure.authorization.sfs.model.UserDetailsImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,11 +36,24 @@ public class ChallengesController{
     private final ChallengeCommandService challengeCommandService;
     private final ChallengeQueryService challengeQueryService;
 
+
     public ChallengesController(ChallengeCommandService challengeCommandService, ChallengeQueryService challengeQueryService) {
         this.challengeCommandService = challengeCommandService;
         this.challengeQueryService = challengeQueryService;
     }
 
+    private Long getAuthenticatedUserId() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        var principal = auth.getPrincipal();
+        if (principal instanceof UserDetailsImpl userDetails) {
+            System.out.println("🪪 Authenticated User ID: " + userDetails.getId());
+            return userDetails.getId();
+        }
+        throw new RuntimeException("Invalid principal type");
+    }
+
+
+    @PreAuthorize("hasRole('TEACHER')")
     @PostMapping
     @Operation(summary = "Create a new challenge", description = "Creates a new challenge with the provided details.")
     @ApiResponses( value = {
@@ -46,13 +62,16 @@ public class ChallengesController{
         @ApiResponse(responseCode = "404", description = "Challenge not found")
     })
     public ResponseEntity<ChallengeResource> createChallenge(@RequestBody CreateChallengeResource challengeResource){
+
+        Long authenticatedUserId = getAuthenticatedUserId();
+
         var createdChallenge= CreateChallengeCommandFromResourceAssembler.toCommandFromResource(challengeResource);
-        var challengeId=challengeCommandService.handle(createdChallenge);
+        var challengeId=challengeCommandService.handle(createdChallenge, authenticatedUserId);
         if (challengeId==null|| challengeId==0L){
             return ResponseEntity.badRequest().build(); //da una respuestra 400 y vacia
         }
         var getChallengeByIdQuery= new GetChallengeByIdQuery(challengeId);
-        var challenge= challengeQueryService.handle(getChallengeByIdQuery);
+        var challenge= challengeQueryService.handle(getChallengeByIdQuery,authenticatedUserId);
 
         if (challenge.isEmpty()){
            return ResponseEntity.notFound().build(); // da una respuesta 404 y vacia
@@ -70,8 +89,9 @@ public class ChallengesController{
         @ApiResponse(responseCode = "404", description = "Challenge not found")
     })
     public ResponseEntity<ChallengeResource> updateChallenge(@PathVariable Long challengeId, @RequestBody UpdateChallengeResource updateChallengeResource){
+        Long userId = getAuthenticatedUserId();
         var updateChallengeCommand = UpdateChallengeCommandFromResourceAssembler.toCommandFromResource(challengeId,updateChallengeResource);
-        var updatedChallenge= challengeCommandService.handle(updateChallengeCommand);
+        var updatedChallenge= challengeCommandService.handle(updateChallengeCommand,userId);
         if (updatedChallenge.isEmpty()){
             return ResponseEntity.notFound().build(); // da una respuesta 404 y vacia
         }
@@ -100,9 +120,11 @@ public class ChallengesController{
         @ApiResponse(responseCode = "200", description = "Challenge retrieved successfully"),
         @ApiResponse(responseCode = "404", description = "Challenge not found")
     })
-    public ResponseEntity<ChallengeResource> getChallenge(@PathVariable Long challengeId){
+    public ResponseEntity<ChallengeResource> getChallengeById(@PathVariable Long challengeId){
+        Long authenticatedUserId = getAuthenticatedUserId();
+
         var getChallengeByIdQuery = new GetChallengeByIdQuery(challengeId);
-        var challenge = challengeQueryService.handle(getChallengeByIdQuery);
+        var challenge = challengeQueryService.handle(getChallengeByIdQuery,authenticatedUserId);
         if (challenge.isEmpty()){
             return ResponseEntity.notFound().build(); // da una respuesta 404 y vacia
         }
@@ -120,7 +142,7 @@ public class ChallengesController{
     public ResponseEntity<List<ChallengeResource>> getAllChallenges(){
         var challenges= challengeQueryService.handle(new GetAllChallengesQuery());
         if (challenges.isEmpty()){
-            return ResponseEntity.notFound().build(); // da una respuesta 404 y vacia
+            return ResponseEntity.ok(List.of()); // da una respuesta 404 y vacia
         }
         var challengeResources=challenges.stream()
                 .map(ChallengeResourceFromEntityAssembler::toResourceFromEntity)
@@ -136,8 +158,10 @@ public class ChallengesController{
         @ApiResponse(responseCode = "404", description = "No challenges found for the group")
     })
     public ResponseEntity<List<ChallengeResource>> getChallengesByGroupId(@PathVariable Long groupId){
+
+        Long authenticatedUserId = getAuthenticatedUserId();
         var getChallengesByGroupIdQuery=new GetChallengesByGroupIdQuery(groupId);
-        var challenges=challengeQueryService.handle(getChallengesByGroupIdQuery);
+        var challenges=challengeQueryService.handle(getChallengesByGroupIdQuery,authenticatedUserId);
         if (challenges.isEmpty()){
             return ResponseEntity.notFound().build(); // da una respuesta 404 y vacia
         }

@@ -19,4 +19,6 @@ public interface UserQueryService {
     Optional<ProfileInGroup> handle(GetProfilesInGroupsByGroupIdAndStudentIdQuery getProfilesInGroupsByGroupIdAndStudentIdQuery);
 
     List<User> handle(GetUsersByGroupIdQuery getUsersByGroupIdQuery);
+
+    Optional<String> handle(GetFullNameByIdQuery getFullNameByIdQuery);
 }
