@@ -21,6 +21,6 @@ public interface GroupCommandService {
 
     void handle(ResetGroupJoinCodeForGroupCommand command);
 
-
+    void handle(KickStudentFromGroupCommand command, Long teacherId);
 
 }

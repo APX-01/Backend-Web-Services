@@ -2,6 +2,7 @@ package com.education.eduhive.groups.interfaces.rest;
 
 import com.education.eduhive.groups.domain.model.commands.DeleteGroupCommand;
 import com.education.eduhive.groups.domain.model.commands.JoinGroupByCodeCommand;
+import com.education.eduhive.groups.domain.model.commands.KickStudentFromGroupCommand;
 import com.education.eduhive.groups.domain.model.queries.GetAllGroupsQuery;
 import com.education.eduhive.groups.domain.model.queries.GetGroupByIdQuery;
 import com.education.eduhive.groups.domain.model.queries.GetGroupByKeyQuery;
@@ -268,5 +269,19 @@ public class GroupsController {
         return groupOptional
                 .map(group -> ResponseEntity.ok(GroupResourceFromEntityAssembler.toResourceFromEntity(group)))
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{groupId}/students/{studentId}")
+    public ResponseEntity<?> kickStudentFromGroup(
+            @PathVariable Long groupId,
+            @PathVariable Long studentId) {
+
+        Long teacherId = getAuthenticatedUserId(); // 👈 Id del profe logueado desde el JWT
+
+        KickStudentFromGroupCommand command = new KickStudentFromGroupCommand(studentId, groupId);
+
+        groupCommandService.handle(command, teacherId);
+
+        return ResponseEntity.noContent().build(); // 204 No Content ✅
     }
 }
