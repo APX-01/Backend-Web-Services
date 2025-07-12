@@ -67,7 +67,6 @@ public class WebSecurityConfiguration {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        // ✅ CORS correcto con allowCredentials y sin wildcard *
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
         http.csrf(csrf -> csrf.disable())
@@ -91,13 +90,12 @@ public class WebSecurityConfiguration {
         return http.build();
     }
 
-    // ✅ Usa una bean CORS reutilizable
     private UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("https://frontend-web-applications-deploymen.vercel.app")); // NO wildcard si allowCredentials!
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Preflight!
+        config.setAllowedOrigins(List.of("https://frontend-web-applications-deploymen.vercel.app"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true); // Esto activa la restricción de no usar "*"
+        config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
